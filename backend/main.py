@@ -1,22 +1,35 @@
 import os
+import httpx
+
 from fastapi import FastAPI
 from anthropic import Anthropic
+from supabase import create_client, Client
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # Must be first, before any os.environ.get()
+
+PL_API_TOKEN = os.environ.get("PL_API_TOKEN")
+PL_API_BASE = "https://us.prairielearn.com/pl/api/v1"
+PL_HEADERS = {"Private-Token": PL_API_TOKEN}
 
 app = FastAPI()
-client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+claude = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+supabase: Client = create_client(
+    os.environ.get("SUPABASE_URL"),
+    os.environ.get("SUPABASE_KEY")
+)
 
 @app.get("/")
 def health_check():
     return {"status": "ok"}
 
-@app.get("/test-claude")
-def test_claude():
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=64,
-        messages=[{"role": "user", "content": "Say hello in one sentence."}]
-    )
-    return {"response": message.content[0].text}
+@app.get("/test-pl")
+async def test_prairielearn():
+    async with httpx.AsyncClient() as http:
+        response = await http.get(
+            f"{PL_API_BASE}/course_instances/213859/assessments",
+            headers=PL_HEADERS
+        )
+    return response.json()
