@@ -1,0 +1,71 @@
+export interface MajorConcept {
+  id: string;
+  label: string;
+  color: string;
+  subconcepts: string[];
+}
+
+export const majorConcepts: MajorConcept[] = [
+  { id: 'data-types',      label: 'Data Types',              color: '#1D4ED8',
+    subconcepts: ['Numeric types (integers, floats)', 'Strings', 'Booleans'] },
+  { id: 'data-rep',        label: 'Data Representation',     color: '#0369A1',
+    subconcepts: ['Binary', 'Hex', 'Decimal'] },
+  { id: 'variables',       label: 'Variables',               color: '#0F766E',
+    subconcepts: ['Variable names', 'Variable assignment', 'Variable scope'] },
+  { id: 'arithmetic-ops',  label: 'Arithmetic Operations',   color: '#047857',
+    subconcepts: ['Simple arithmetic\n(+, -, *, **)', 'Division', 'Modulo', 'Order of operations'] },
+  { id: 'string-ops',      label: 'String Operations',       color: '#0891B2',
+    subconcepts: ['String concatenation', 'String slicing', 'String formatting\n(f-strings)'] },
+  { id: 'boolean-expr',    label: 'Boolean Expressions',     color: '#B45309',
+    subconcepts: ['Logical operators\n(and, or, not)', 'Comparison operators\n(==, <, >, <=, >=, !=)'] },
+  { id: 'conditionals',    label: 'Conditional Statements',  color: '#92400E',
+    subconcepts: ['If', 'Else', 'Elif'] },
+  { id: 'functions',       label: 'Functions',               color: '#6D28D9',
+    subconcepts: ['Defining functions', 'Calling functions', 'Function parameters', 'Return statements'] },
+  { id: 'built-in-fns',   label: 'Built-in Functions',      color: '#7C3AED',
+    subconcepts: ['len()', 'min()', 'max()', 'range()', 'Type casting'] },
+  { id: 'main-fn',         label: 'Main Function',           color: '#4C1D95',
+    subconcepts: ['Defining the\nmain function', 'Using the\nmain function'] },
+  { id: 'input-output',    label: 'Input / Output',          color: '#065F46',
+    subconcepts: ['input()', 'print()'] },
+  { id: 'loops',           label: 'Loops',                   color: '#D97706',
+    subconcepts: ['For loops', 'While loops', 'Break', 'Continue', 'Nested loops', 'Iteration'] },
+  { id: 'lists',           label: 'Lists',                   color: '#B91C1C',
+    subconcepts: ['Creating a list', 'Accessing a value', 'List slicing', 'List built-in functions'] },
+  { id: 'nested-lists',    label: 'Nested Lists',            color: '#991B1B',
+    subconcepts: ['Creating a nested list', 'Accessing nested list values'] },
+  { id: 'dictionaries',    label: 'Dictionaries',            color: '#BE123C',
+    subconcepts: ['Creating a dictionary', 'Accessing a value', 'Dictionary built-in\nfunctions'] },
+  { id: 'tuples',          label: 'Tuples',                  color: '#C2410C',
+    subconcepts: ['Creating a tuple', 'Accessing a value', 'Tuple built-in functions'] },
+  { id: 'sets',            label: 'Sets',                    color: '#9A3412',
+    subconcepts: ['Creating a set', 'Accessing a value', 'Set built-in functions'] },
+  { id: 'recursion',       label: 'Recursion',               color: '#854D0E',
+    subconcepts: ['Base case', 'Recursive step'] },
+  { id: 'files',           label: 'Files',                   color: '#14532D',
+    subconcepts: ['Opening & closing files', 'Reading a file', 'Writing to a file'] },
+];
+
+// Direct prerequisite edges only (transitive reduction applied)
+export const prereqEdgeData = [
+  { source: 'data-types',     target: 'variables' },
+  { source: 'variables',      target: 'arithmetic-ops' },
+  { source: 'data-types',     target: 'string-ops' },
+  { source: 'variables',      target: 'boolean-expr' },
+  { source: 'boolean-expr',   target: 'conditionals' },
+  { source: 'variables',      target: 'functions' },
+  { source: 'functions',      target: 'built-in-fns' },
+  { source: 'functions',      target: 'main-fn' },
+  { source: 'conditionals',   target: 'main-fn' },
+  { source: 'built-in-fns',  target: 'input-output' },
+  { source: 'variables',      target: 'dictionaries' },
+  { source: 'variables',      target: 'lists' },
+  { source: 'lists',          target: 'nested-lists' },
+  { source: 'boolean-expr',   target: 'loops' },
+  { source: 'functions',      target: 'recursion' },
+  { source: 'conditionals',   target: 'recursion' },
+  { source: 'input-output',   target: 'files' },
+  { source: 'variables',      target: 'tuples' },
+  { source: 'variables',      target: 'sets' },
+  { source: 'data-types',     target: 'data-rep' },
+];
