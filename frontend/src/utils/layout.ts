@@ -8,7 +8,7 @@ const SUB_ROW_H = 34;
 
 export function buildGraphElements(): { nodes: Node[]; edges: Edge[] } {
   const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'BT', ranksep: 160, nodesep: 16 });
+  g.setGraph({ rankdir: 'BT', ranksep: 120, nodesep: 100 });
 
   majorConcepts.forEach(c => {
     const rows = c.subconcepts.length;
