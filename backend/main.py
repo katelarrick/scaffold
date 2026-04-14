@@ -33,3 +33,25 @@ async def test_prairielearn():
             headers=PL_HEADERS
         )
     return response.json()
+
+@app.get("/assessments")
+async def get_assessments():
+    result = supabase.table("assessments").select("*").order("name").execute()
+    return result.data
+
+@app.get("/assessments/{assessment_id}/questions")
+async def get_questions(assessment_id: str):
+    result = (supabase.table("questions")
+              .select("*")
+              .eq("assessment_id", assessment_id)
+              .order("title")
+              .execute())
+    return result.data
+
+@app.get("/questions/{question_id}/concepts")
+async def get_question_concepts(question_id: str):
+    result = (supabase.table("question_concepts")
+              .select("*")
+              .eq("question_id", question_id)
+              .execute())
+    return result.data
