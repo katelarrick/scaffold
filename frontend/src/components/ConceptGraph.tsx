@@ -10,7 +10,7 @@ import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
 
 interface ConceptGraphProps {
   highlightedIds: Set<string>;
-  selectedConceptId: string | null;
+  //selectedConceptId: string | null;
   onConceptClick: (id: string) => void;
 }
 
@@ -71,7 +71,7 @@ function MajorNode({ data }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, selectedConceptId, onConceptClick }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, onConceptClick }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;

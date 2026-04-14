@@ -91,7 +91,6 @@ export default function App() {
       <div style={{ flex: 1, minHeight: 0 }}>
         <ConceptGraph
           highlightedIds={highlightedIds}
-          selectedConceptId={selectedConceptId}
           onConceptClick={setSelectedConceptId}
         />
       </div>
