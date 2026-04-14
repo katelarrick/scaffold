@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import {
-  ReactFlow, Controls, MiniMap, Background, BackgroundVariant,
+  ReactFlow, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
   type NodeProps, type NodeTypes, type Node,
 } from '@xyflow/react';
@@ -10,8 +10,18 @@ import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
 
 interface ConceptGraphProps {
   highlightedIds: Set<string>;
-  //selectedConceptId: string | null;
+  highlightedSubconcepts: Map<string, Set<string>>;
   onConceptClick: (id: string) => void;
+}
+
+function toPastel(hex: string, strength: number = 0.35): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const pr = Math.round(r * strength + 255 * (1 - strength));
+  const pg = Math.round(g * strength + 255 * (1 - strength));
+  const pb = Math.round(b * strength + 255 * (1 - strength));
+  return `rgb(${pr}, ${pg}, ${pb})`;
 }
 
 function MajorNode({ data }: NodeProps) {
@@ -20,6 +30,7 @@ function MajorNode({ data }: NodeProps) {
   const subconcepts = data.subconcepts as string[];
   const highlighted = data.highlighted as boolean;
   const hasSelection = data.hasSelection as boolean;
+  const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
 
   return (
     <div style={{
@@ -53,9 +64,14 @@ function MajorNode({ data }: NodeProps) {
       }}>
         {subconcepts.map((sub, i) => (
           <div key={i} style={{
-            background: '#fff', padding: '5px 6px',
-            textAlign: 'center', fontSize: 10, fontWeight: 500,
-            lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
+            background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
+            padding: '5px 6px',
+            textAlign: 'center',
+            fontSize: 10,
+            fontWeight: 500,
+            lineHeight: 1.3,
+            color: '#1E293B',
+            whiteSpace: 'pre-line',
           }}>
             {sub}
           </div>
@@ -71,22 +87,23 @@ function MajorNode({ data }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, onConceptClick }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
-    setNodes(nds => nds.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        highlighted: highlightedIds.has(node.id),
-        hasSelection,
-      },
-    })));
-  }, [highlightedIds, hasSelection, setNodes]);
+  setNodes(nds => nds.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      highlighted: highlightedIds.has(node.id),
+      hasSelection,
+      highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
+    },
+  })));
+}, [highlightedIds, hasSelection, highlightedSubconcepts, setNodes]);
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {
@@ -98,7 +115,7 @@ export default function ConceptGraph({ highlightedIds, onConceptClick }: Concept
         id: `prereq-${e.source}-${e.target}`,
         source: e.source, target: e.target,
         sourceHandle: 'top', targetHandle: 'bottom',
-        type: 'smoothstep',
+        type: 'dashed',
         animated: isHighlighted,
         style: {
           stroke: isHighlighted ? color : '#CBD5E1',
@@ -126,10 +143,6 @@ export default function ConceptGraph({ highlightedIds, onConceptClick }: Concept
         fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
       >
         <Controls />
-        <MiniMap
-          nodeColor={n => highlightedIds.has(n.id) ? (n.data?.color as string) : '#CBD5E1'}
-          style={{ background: '#fff', border: '1px solid #E2E8F0' }}
-        />
         <Background variant={BackgroundVariant.Dots} color="#CBD5E1" gap={20} />
       </ReactFlow>
     </div>

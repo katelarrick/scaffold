@@ -39,6 +39,8 @@ export default function App() {
   const [selectedQuestionId, setSelectedQuestionId]     = useState('');
   const [highlightedIds, setHighlightedIds]         = useState<Set<string>>(new Set());
   const [selectedConceptId, setSelectedConceptId]   = useState<string | null>(null);
+  const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
+
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
 
@@ -48,12 +50,22 @@ export default function App() {
     setSelectedQuestionId('');
     setHighlightedIds(new Set());
     setSelectedConceptId(null);
+    setHighlightedSubconcepts(new Map());
   }, [selectedAssessmentId]);
 
   useEffect(() => {
-    if (!selectedQuestionId) { setHighlightedIds(new Set()); return; }
+    if (!selectedQuestionId) { setHighlightedIds(new Set());  setHighlightedSubconcepts(new Map()); return; }
     fetchQuestionConcepts(selectedQuestionId).then(concepts => {
       setHighlightedIds(computeSubgraph(concepts.map(c => c.concept_id)));
+
+      const subMap = new Map<string, Set<string>>();
+      concepts.forEach(c => {
+        if (c.subconcept_label) {
+          if (!subMap.has(c.concept_id)) subMap.set(c.concept_id, new Set());
+          subMap.get(c.concept_id)!.add(c.subconcept_label);
+        }
+      });
+      setHighlightedSubconcepts(subMap);
     });
     setSelectedConceptId(null);
   }, [selectedQuestionId]);
@@ -91,6 +103,7 @@ export default function App() {
       <div style={{ flex: 1, minHeight: 0 }}>
         <ConceptGraph
           highlightedIds={highlightedIds}
+          highlightedSubconcepts={highlightedSubconcepts}
           onConceptClick={setSelectedConceptId}
         />
       </div>
