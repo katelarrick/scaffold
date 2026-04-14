@@ -14,6 +14,15 @@ PL_HEADERS = {"Private-Token": PL_API_TOKEN}
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 claude = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 supabase: Client = create_client(
