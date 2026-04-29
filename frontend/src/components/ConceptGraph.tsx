@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import {
   ReactFlow, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
-  type NodeProps, type NodeTypes, type Node,
+  type NodeProps, type NodeTypes, type Node
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { buildGraphElements } from '../utils/layout';
@@ -143,7 +143,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
         fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
       >
         <Controls />
-        <Background variant={BackgroundVariant.Dots} color="#CBD5E1" gap={20} />
+        <Background variant={BackgroundVariant.Dots} color='#0a6efc' gap={20} />
       </ReactFlow>
     </div>
   );
