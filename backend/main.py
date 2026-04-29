@@ -2,9 +2,10 @@ import os
 import httpx
 
 from fastapi import FastAPI
-from anthropic import Anthropic
+from anthropic import Anthropic, BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()  # Must be first, before any os.environ.get()
 
@@ -64,3 +65,12 @@ async def get_question_concepts(question_id: str):
               .eq("question_id", question_id)
               .execute())
     return result.data
+
+
+class PinRequest(BaseModel):
+    pin: str
+
+@app.post("/validate-pin")
+async def validate_pin(body: PinRequest):
+    result = supabase.table("student_pins").select("pin").eq("pin", body.pin).execute()
+    return {"valid": len(result.data) > 0}
