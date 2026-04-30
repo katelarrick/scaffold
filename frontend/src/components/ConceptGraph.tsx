@@ -108,7 +108,7 @@ function ResetButton({ onReset }: { onReset: () => void }) {
         display: 'flex',
         alignItems: 'center',
         gap: 4,
-        width: hovered ? 140 : 44,
+        width: hovered ? 180 : 44,
         transition: 'width 0.2s ease',
         overflow: 'hidden',
         cursor: 'pointer',
@@ -135,11 +135,11 @@ function ResetButton({ onReset }: { onReset: () => void }) {
         color: '#1E293B',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
-        width: hovered ? 90 : 0,
+        width: hovered ? 180 : 0,
         opacity: hovered ? 1 : 0,
         transition: 'width 0.2s ease, opacity 0.15s ease',
       }}>
-        Reset Graph
+        Click to reset graph
       </span>
     </div>
   );
@@ -314,8 +314,8 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative'}}>
       <div style={{ position: 'absolute', alignItems: 'flex-end', top: 12, right: 12, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <LevelLegend />
         <ResetButton onReset={handleReset} />
+        <LevelLegend />
       </div>
       <ReactFlow
         nodes={nodes} edges={edges}
