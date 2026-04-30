@@ -110,11 +110,25 @@ export default function App() {
 
       {/* ── Top bar ── */}
       <div style={{
-        height: 52, flexShrink: 0,
+        height: 60, flexShrink: 0,
         background: '#f4e87b',
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px',
       }}>
-        <span style={{ color: '#1E293B', fontWeight: 1000, fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '0.02em', fontSize: 25, marginRight: 4 }}>Scaffold</span>
+        <div style={{
+          fontFamily: 'Helvetica, Arial, sans-serif',
+          fontWeight: 800,
+          fontSize: 20,
+          color: '#1E293B',
+          background: '#fe9a71',
+          padding: '4px 12px',
+          borderRadius: 8,
+          borderTop:    '1.5px solid #1E293B',
+          borderLeft:   '1.5px solid #1E293B',
+          borderRight:  '4px solid #1E293B',
+          borderBottom: '4px solid #1E293B',
+        }}>
+          Scaffold
+        </div>
         <select value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)} style={selectStyle}>
           <option value="">Select assessment…</option>
           {assessments.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
