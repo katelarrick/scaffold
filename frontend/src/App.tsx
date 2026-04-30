@@ -48,6 +48,7 @@ export default function App() {
   const [studentPin, setStudentPin]   = useState<string | null>(null);
   const [_isTracked, setIsTracked]     = useState(false);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
+  const [closeHovered, setCloseHovered] = useState(false);
 
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
@@ -236,18 +237,41 @@ export default function App() {
             </div>
 
             {/* Close button */}
-            <button
+            <div
               onClick={() => { setSelectedConceptId(null); setActiveTab(null); }}
+              onMouseEnter={() => setCloseHovered(true)}
+              onMouseLeave={() => setCloseHovered(false)}
               style={{
-                background: 'none', border: 'none',
-                cursor: 'pointer', color: '#000000',
-                fontSize: 20, lineHeight: 1,
-                padding: '0 4px', flexShrink: 0,
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                borderTop:    '1.5px solid #1E293B',
+                borderLeft:   '1.5px solid #1E293B',
+                borderRight:  '4px solid #1E293B',
+                borderBottom: '4px solid #1E293B',
+                background: closeHovered ? '#ef4444' : '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: 'background 0.15s',
               }}
-              title="Close"
             >
-              ✕
-            </button>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={closeHovered ? '#ffffff' : '#1E293B'}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </div>
           </>
         ) : (
           <div style={{ color: '#000000', fontSize: 13, lineHeight: '36px' }}>
