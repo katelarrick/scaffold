@@ -95,7 +95,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', color: '#F8FAFC' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', color: '#F8FAFC' }}>
 
       {/* ── Top bar ── */}
       <div style={{

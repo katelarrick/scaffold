@@ -40,7 +40,7 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
   if (step === 'pin') {
     return (
       <div style={{
-        width: '100vw', height: '100vh',
+        width: '100%', height: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: '#F8FAFC',
       }}>
@@ -94,7 +94,7 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
   // ── Consent form ──
   return (
     <div style={{
-      width: '100vw', height: '100vh',
+      width: '100%', height: '100%',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: '#F8FAFC',
     }}>
