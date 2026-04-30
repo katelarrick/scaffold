@@ -34,3 +34,13 @@ export async function fetchQuestionConcepts(questionId: string): Promise<Questio
   const res = await fetch(`${API_URL}/questions/${questionId}/concepts`);
   return res.json();
 }
+
+export async function validatePin(pin: string): Promise<boolean> {
+  const res = await fetch(`${API_URL}/validate-pin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pin }),
+  });
+  const data = await res.json();
+  return data.valid;
+}

@@ -3,6 +3,7 @@ import ConceptGraph from './components/ConceptGraph';
 import { fetchAssessments, fetchQuestions, fetchQuestionConcepts } from './api/client';
 import type { Assessment, Question } from './api/client';
 import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
+import ConsentScreen from './components/ConsentScreen';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
@@ -43,6 +44,8 @@ export default function App() {
   const [selectedConceptId, setSelectedConceptId]   = useState<string | null>(null);
   const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
   const [activeTab, setActiveTab] = useState<'description' | 'example' | 'practice' | null>(null);
+  const [studentPin, setStudentPin]   = useState<string | null>(null);
+  const [isTracked, setIsTracked]     = useState(false);
 
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
@@ -81,6 +84,15 @@ export default function App() {
   const selectedConcept = selectedConceptId
     ? majorConcepts.find(c => c.id === selectedConceptId)
     : null;
+
+  const handleConsentComplete = (pin: string, consented: boolean) => {
+    setStudentPin(pin);
+    setIsTracked(consented);
+  };
+
+  if (!studentPin) {
+    return <ConsentScreen onComplete={handleConsentComplete} />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', color: '#F8FAFC' }}>
