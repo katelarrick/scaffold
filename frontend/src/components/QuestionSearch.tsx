@@ -65,7 +65,7 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
   };
 
   return (
-  <div ref={containerRef} style={{ position: 'relative', minWidth: 220 }}>
+  <div ref={containerRef} style={{ position: 'relative', minWidth: 240 }}>
 
         {/* Input + clear button wrapper */}
         <div style={{ position: 'relative' }}>

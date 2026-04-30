@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import {
   ReactFlow, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
@@ -24,6 +24,72 @@ function toPastel(hex: string, strength: number = 0.35): string {
   const pg = Math.round(g * strength + 255 * (1 - strength));
   const pb = Math.round(b * strength + 255 * (1 - strength));
   return `rgb(${pr}, ${pg}, ${pb})`;
+}
+
+const LEVELS = [
+  { label: 'Level 1', color: '#c5d3f9' },
+  { label: 'Level 2', color: '#feaef2' },
+  { label: 'Level 3', color: '#93ebff' },
+  { label: 'Level 4', color: '#fe9a71' },
+  { label: 'Level 5', color: '#2bcd9c' },
+  { label: 'Level 6', color: '#f4e87b' },
+];
+
+function LevelLegend() {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        zIndex: 10,
+        background: 'rgba(255,255,255,0.92)',
+        borderRadius: 10,
+        borderTop:    '1.5px solid #1E293B',
+        borderLeft:   '1.5px solid #1E293B',
+        borderRight:  '4px solid #1E293B',
+        borderBottom: '4px solid #1E293B',
+        padding: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        width: hovered ? 100 : 44,
+        transition: 'width 0.2s ease',
+        overflow: 'hidden',
+        cursor: 'default',
+      }}
+    >
+      {LEVELS.map((level, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 22,
+            height: 22,
+            borderRadius: 5,
+            background: level.color,
+            border: '1.5px solid #1E293B',
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontFamily: 'Helvetica, Arial, sans-serif',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#1E293B',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            width: hovered ? 72 : 0,
+            opacity: hovered ? 1 : 0,
+            transition: 'width 0.2s ease, opacity 0.15s ease',
+          }}>
+            {level.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function MajorNode({ data }: NodeProps) {
@@ -65,11 +131,12 @@ function MajorNode({ data }: NodeProps) {
         letterSpacing: '0.03em',
         fontFamily: 'Helvetica, Arial, sans-serif',
         color: '#000000', 
-        paddingTop: '20px',
+        paddingTop: '27px',
         paddingBottom: '6px',
         paddingLeft: '14px',
         paddingRight: '14px',
-        textAlign: 'left', fontSize: 23, fontWeight: 700,
+        lineHeight: 1.1,
+        textAlign: 'left', fontSize: 28, fontWeight: 700,
         whiteSpace: 'pre-line', 
         transition: 'background 0.25s',
         position: 'relative',
@@ -118,7 +185,7 @@ function MajorNode({ data }: NodeProps) {
             background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
             padding: '5px 6px', textAlign: 'center',
             fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: 15, fontWeight: 500,
+            fontSize: 17, fontWeight: 550,
             lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
           }}>
             {sub}
@@ -183,7 +250,8 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
   }, [onConceptClick]);
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative'}}>
+      <LevelLegend />
       <ReactFlow
         nodes={nodes} edges={edges}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}

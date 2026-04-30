@@ -122,3 +122,14 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
 }
+
+.react-flow__controls {
+  --xy-controls-button-background-color: #ffffff;
+  --xy-controls-button-background-color-hover: #1E293B;
+  --xy-controls-button-color: #1E293B;
+  --xy-controls-button-border-color: #1E293B;
+  --xy-controls-box-shadow: 2px 4px 0px #1E293B;
+  border: 1.5px solid #1E293B;
+  border-radius: 8px;
+  overflow: hidden;
+}
