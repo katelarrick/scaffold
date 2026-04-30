@@ -25,22 +25,27 @@ function toPastel(hex: string, strength: number = 0.35): string {
 }
 
 function MajorNode({ data }: NodeProps) {
-  const color       = data.color as string;
-  const label       = data.label as string;
-  const subconcepts = data.subconcepts as string[];
-  const highlighted = data.highlighted as boolean;
+  const color        = data.color as string;
+  const label        = data.label as string;
+  const subconcepts  = data.subconcepts as string[];
+  const highlighted  = data.highlighted as boolean;
   const hasSelection = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
+
+  // Show full color when no question is selected, or when this node is relevant
+  const showColor = !hasSelection || highlighted;
 
   return (
     <div style={{
       width: 220,
       borderRadius: 10,
       overflow: 'hidden',
-      border: `${highlighted ? 3 : 2}px solid ${highlighted ? color : '#CBD5E1'}`,
-      boxShadow: highlighted
+      border: `${highlighted && hasSelection ? 3 : 2}px solid ${showColor ? color : '#CBD5E1'}`,
+      boxShadow: highlighted && hasSelection
         ? `0 0 0 3px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
-        : '0 2px 8px rgba(0,0,0,0.1)',
+        : showColor
+          ? '0 3px 12px rgba(0,0,0,0.18)'
+          : '0 2px 8px rgba(0,0,0,0.1)',
       opacity: hasSelection && !highlighted ? 0.25 : 1,
       cursor: highlighted ? 'pointer' : 'default',
       transition: 'opacity 0.25s, box-shadow 0.25s',
@@ -49,7 +54,7 @@ function MajorNode({ data }: NodeProps) {
         style={{ opacity: 0, pointerEvents: 'none' }} />
 
       <div style={{
-        background: highlighted ? color : '#94A3B8',
+        background: showColor ? color : '#94A3B8',
         color: '#fff', padding: '9px 14px',
         textAlign: 'center', fontSize: 13, fontWeight: 700,
         transition: 'background 0.25s',
@@ -59,19 +64,15 @@ function MajorNode({ data }: NodeProps) {
 
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr', gap: 1,
-        background: highlighted ? `${color}55` : '#CBD5E140',
+        background: showColor ? `${color}55` : '#CBD5E140',
         padding: 1,
       }}>
         {subconcepts.map((sub, i) => (
           <div key={i} style={{
             background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
-            padding: '5px 6px',
-            textAlign: 'center',
-            fontSize: 10,
-            fontWeight: 500,
-            lineHeight: 1.3,
-            color: '#1E293B',
-            whiteSpace: 'pre-line',
+            padding: '5px 6px', textAlign: 'center',
+            fontSize: 10, fontWeight: 500,
+            lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
           }}>
             {sub}
           </div>
