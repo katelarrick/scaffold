@@ -72,5 +72,7 @@ class PinRequest(BaseModel):
 
 @app.post("/validate-pin")
 async def validate_pin(body: PinRequest):
+    print(f"PIN received: {repr(body.pin)}")
     result = supabase.table("student_pins").select("pin").eq("pin", body.pin).execute()
+    print(f"Result data: {result.data}")
     return {"valid": len(result.data) > 0}
