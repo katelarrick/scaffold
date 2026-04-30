@@ -4,6 +4,7 @@ import { fetchAssessments, fetchQuestions, fetchQuestionConcepts } from './api/c
 import type { Assessment, Question } from './api/client';
 import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
 import ConsentScreen from './components/ConsentScreen';
+import QuestionSearch from './components/QuestionSearch';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
@@ -45,7 +46,7 @@ export default function App() {
   const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
   const [activeTab, setActiveTab] = useState<'description' | 'example' | 'practice' | null>(null);
   const [studentPin, setStudentPin]   = useState<string | null>(null);
-  const [isTracked, setIsTracked]     = useState(false);
+  const [_isTracked, setIsTracked]     = useState(false);
 
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
@@ -108,15 +109,12 @@ export default function App() {
           <option value="">Select assessment…</option>
           {assessments.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
-        <select
-          value={selectedQuestionId}
-          onChange={e => setSelectedQuestionId(e.target.value)}
+        <QuestionSearch
+          questions={questions}
+          selectedQuestionId={selectedQuestionId}
+          onSelect={setSelectedQuestionId}
           disabled={!selectedAssessmentId || questions.length === 0}
-          style={{ ...selectStyle, opacity: !selectedAssessmentId ? 0.5 : 1 }}
-        >
-          <option value="">Select question…</option>
-          {questions.map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
-        </select>
+        />
       </div>
 
       {/* ── Graph ── */}
