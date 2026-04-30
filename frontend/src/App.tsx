@@ -133,59 +133,74 @@ export default function App() {
         borderTop: '1px solid #E2E8F0',
         padding: '12px 20px',
         minHeight: 60,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 12,
       }}>
         {selectedConcept ? (
           <>
-            {/* Concept label + buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{
-                background: selectedConcept.color, color: '#fff',
-                fontWeight: 700, fontSize: 13,
-                padding: '3px 10px', borderRadius: 4, marginRight: 6,
-              }}>
-                {selectedConcept.label}
-              </span>
-              {(['description', 'example', 'practice'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(activeTab === tab ? null : tab)}
-                  style={{
-                    background: activeTab === tab ? selectedConcept.color : '#F1F5F9',
-                    color: activeTab === tab ? '#fff' : '#1E293B',
-                    border: `1px solid ${activeTab === tab ? selectedConcept.color : '#E2E8F0'}`,
-                    borderRadius: 6, padding: '5px 14px',
-                    fontSize: 13, cursor: 'pointer', fontWeight: 500,
-                  }}
-                >
-                  {tab === 'description' && 'Description'}
-                  {tab === 'example'     && 'Code Example'}
-                  {tab === 'practice'    && 'Practice with a PrairieLearn question'}
-                </button>
-              ))}
+            {/* Existing content — concept label + buttons + content area */}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{
+                  background: selectedConcept.color, color: '#fff',
+                  fontWeight: 700, fontSize: 13,
+                  padding: '3px 10px', borderRadius: 4, marginRight: 6,
+                }}>
+                  {selectedConcept.label}
+                </span>
+                {(['description', 'example', 'practice'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(activeTab === tab ? null : tab)}
+                    style={{
+                      background: activeTab === tab ? selectedConcept.color : '#F1F5F9',
+                      color: activeTab === tab ? '#fff' : '#1E293B',
+                      border: `1px solid ${activeTab === tab ? selectedConcept.color : '#E2E8F0'}`,
+                      borderRadius: 6, padding: '5px 14px',
+                      fontSize: 13, cursor: 'pointer', fontWeight: 500,
+                    }}
+                  >
+                    {tab === 'description' && 'Show Description'}
+                    {tab === 'example'     && 'Get Example'}
+                    {tab === 'practice'    && 'Practice with a PrairieLearn question'}
+                  </button>
+                ))}
+              </div>
+
+              {activeTab && (
+                <div style={{
+                  marginTop: 12, padding: '10px 14px',
+                  background: '#F8FAFC', borderRadius: 8,
+                  border: '1px solid #E2E8F0',
+                  fontSize: 13, color: '#1E293B', lineHeight: 1.6, minHeight: 60,
+                }}>
+                  {activeTab === 'description' && `Description for "${selectedConcept.label}" will appear here.`}
+                  {activeTab === 'example'     && `Example for "${selectedConcept.label}" will appear here.`}
+                  {activeTab === 'practice'    && `PrairieLearn practice question for "${selectedConcept.label}" will appear here.`}
+                </div>
+              )}
             </div>
 
-            {/* Content area */}
-            {activeTab && (
-              <div style={{
-                marginTop: 12,
-                padding: '10px 14px',
-                background: '#F8FAFC',
-                borderRadius: 8,
-                border: '1px solid #E2E8F0',
-                fontSize: 13, color: '#1E293B', lineHeight: 1.6,
-                minHeight: 60,
-              }}>
-                {activeTab === 'description' && `Description for "${selectedConcept.label}" will appear here.`}
-                {activeTab === 'example'     && `Example for "${selectedConcept.label}" will appear here.`}
-                {activeTab === 'practice'    && `PrairieLearn practice question for "${selectedConcept.label}" will appear here.`}
-              </div>
-            )}
+            {/* Close button */}
+            <button
+              onClick={() => { setSelectedConceptId(null); setActiveTab(null); }}
+              style={{
+                background: 'none', border: 'none',
+                cursor: 'pointer', color: '#94A3B8',
+                fontSize: 20, lineHeight: 1,
+                padding: '0 4px', flexShrink: 0,
+              }}
+              title="Close"
+            >
+              ✕
+            </button>
           </>
         ) : (
           <div style={{ color: '#94A3B8', fontSize: 13, lineHeight: '36px' }}>
             {selectedQuestionId
-              ? 'Click a highlighted concept card to get hints.'
-              : 'Select an assessment and question to begin.'}
+              ? 'Click a concept card to explore it.'
+              : 'Select a question, or click any concept card to explore it.'}
           </div>
         )}
       </div>

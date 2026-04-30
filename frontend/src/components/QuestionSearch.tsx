@@ -65,71 +65,95 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', minWidth: 240 }}>
-      <input
-        type="text"
-        value={inputValue}
-        onChange={handleChange}
-        onFocus={() => { if (!disabled) setIsOpen(true); }}
-        onKeyDown={e => {
-          if (e.key === 'Enter' && filtered.length > 0) handleSelect(filtered[0]);
-          if (e.key === 'Escape') setIsOpen(false);
-        }}
-        placeholder={disabled ? 'Select assessment first…' : 'Search questions…'}
-        disabled={disabled}
-        style={inputStyle}
-      />
+  <div ref={containerRef} style={{ position: 'relative', minWidth: 240 }}>
+    
+        {/* Input + clear button wrapper */}
+        <div style={{ position: 'relative' }}>
+        <input
+            type="text"
+            value={inputValue}
+            onChange={handleChange}
+            onFocus={() => { if (!disabled) setIsOpen(true); }}
+            onKeyDown={e => {
+            if (e.key === 'Enter' && filtered.length > 0) handleSelect(filtered[0]);
+            if (e.key === 'Escape') setIsOpen(false);
+            }}
+            placeholder={disabled ? 'Select assessment first…' : 'Search questions…'}
+            disabled={disabled}
+            style={{ ...inputStyle, paddingRight: inputValue ? 28 : 10 }}
+        />
+        {inputValue && (
+            <button
+            onMouseDown={e => {
+                e.preventDefault();
+                setInputValue('');
+                setIsOpen(false);
+                onSelect('');
+            }}
+            style={{
+                position: 'absolute',
+                right: 6, top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none', border: 'none',
+                cursor: 'pointer', color: '#94A3B8',
+                fontSize: 14, lineHeight: 1, padding: 2,
+            }}
+            >
+            ✕
+            </button>
+        )}
+        </div>
 
-      {isOpen && !disabled && filtered.length > 0 && (
+        {isOpen && !disabled && filtered.length > 0 && (
         <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 4px)',
-          left: 0, right: 0,
-          background: '#fff',
-          border: '1px solid #E2E8F0',
-          borderRadius: 6,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-          zIndex: 100,
-          maxHeight: 260,
-          overflowY: 'auto',
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0, right: 0,
+            background: '#fff',
+            border: '1px solid #E2E8F0',
+            borderRadius: 6,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+            zIndex: 100,
+            maxHeight: 260,
+            overflowY: 'auto',
         }}>
-          {filtered.map((q, i) => (
+            {filtered.map((q, i) => (
             <div
-              key={q.id}
-              onMouseDown={() => handleSelect(q)}
-              style={{
+                key={q.id}
+                onMouseDown={() => handleSelect(q)}
+                style={{
                 padding: '8px 12px',
                 fontSize: 13,
                 cursor: 'pointer',
                 color: '#1E293B',
                 background: q.id === selectedQuestionId ? '#EFF6FF' : '#fff',
                 borderBottom: i < filtered.length - 1 ? '1px solid #F1F5F9' : 'none',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
-              onMouseLeave={e => (e.currentTarget.style.background = q.id === selectedQuestionId ? '#EFF6FF' : '#fff')}
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
+                onMouseLeave={e => (e.currentTarget.style.background = q.id === selectedQuestionId ? '#EFF6FF' : '#fff')}
             >
-              {q.title}
+                {q.title}
             </div>
-          ))}
+            ))}
         </div>
-      )}
+        )}
 
-      {isOpen && !disabled && filtered.length === 0 && inputValue && (
+        {isOpen && !disabled && filtered.length === 0 && inputValue && (
         <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 4px)',
-          left: 0, right: 0,
-          background: '#fff',
-          border: '1px solid #E2E8F0',
-          borderRadius: 6,
-          padding: '8px 12px',
-          fontSize: 13,
-          color: '#94A3B8',
-          zIndex: 100,
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0, right: 0,
+            background: '#fff',
+            border: '1px solid #E2E8F0',
+            borderRadius: 6,
+            padding: '8px 12px',
+            fontSize: 13,
+            color: '#94A3B8',
+            zIndex: 100,
         }}>
-          No questions match "{inputValue}"
+            No questions match "{inputValue}"
         </div>
-      )}
+        )}
     </div>
-  );
+    );
 }

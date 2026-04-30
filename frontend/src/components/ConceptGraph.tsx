@@ -47,7 +47,7 @@ function MajorNode({ data }: NodeProps) {
           ? '0 3px 12px rgba(0,0,0,0.18)'
           : '0 2px 8px rgba(0,0,0,0.1)',
       opacity: hasSelection && !highlighted ? 0.25 : 1,
-      cursor: highlighted ? 'pointer' : 'default',
+      cursor: 'pointer',
       transition: 'opacity 0.25s, box-shadow 0.25s',
     }}>
       <Handle id="bottom" type="target" position={Position.Bottom}
@@ -130,8 +130,8 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
   }, [highlightedIds, hasSelection, setEdges]);
 
   const onNodeClick = useCallback((_e: React.MouseEvent, node: Node) => {
-    if (highlightedIds.has(node.id)) onConceptClick(node.id);
-  }, [highlightedIds, onConceptClick]);
+    onConceptClick(node.id);
+  }, [onConceptClick]);
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
