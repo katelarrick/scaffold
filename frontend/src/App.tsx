@@ -5,6 +5,7 @@ import type { Assessment, Question } from './api/client';
 import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
 import ConsentScreen from './components/ConsentScreen';
 import QuestionSearch from './components/QuestionSearch';
+import AssessmentSelect from './components/AssessmentSelect';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
@@ -24,11 +25,11 @@ function computeSubgraph(taggedIds: string[]): Set<string> {
   return result;
 }
 
-const selectStyle: React.CSSProperties = {
-  background: '#fff', color: '#000000',
-  border: '1px solid #475569', borderRadius: 6,
-  padding: '5px 10px', fontSize: 13, cursor: 'pointer', minWidth: 200,
-};
+// const selectStyle: React.CSSProperties = {
+//   background: '#fff', color: '#000000',
+//   border: '1px solid #475569', borderRadius: 6,
+//   padding: '5px 10px', fontSize: 13, cursor: 'pointer', minWidth: 200,
+// };
 
 // const btnStyle: React.CSSProperties = {
 //   background: '#334155', color: '#fff',
@@ -138,10 +139,14 @@ export default function App() {
         }}>
           Scaffold
         </div>
-        <select value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)} style={selectStyle}>
-          <option value="">Select assessment…</option>
-          {assessments.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
+        <AssessmentSelect
+          assessments={assessments}
+          selectedAssessmentId={selectedAssessmentId}
+          onSelect={id => {
+            setSelectedAssessmentId(id);
+            setSelectedQuestionId('');
+          }}
+        />
         <QuestionSearch
           questions={questions}
           selectedQuestionId={selectedQuestionId}

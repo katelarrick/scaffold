@@ -53,7 +53,9 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: '5px 10px',
+    height: 28,
+    padding: '0px 10px',
+    fontFamily: 'Helvetica, Arial, sans-serif',
     fontSize: 13,
     background: disabled ? '#ffffff' : '#ffffff',
     color: '#1E293B',

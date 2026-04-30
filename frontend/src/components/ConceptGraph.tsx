@@ -229,9 +229,9 @@ function MajorNode({ data }: NodeProps) {
       </div>
 
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr', gap: 1,
+        display: 'grid', gridTemplateColumns: '1fr', gap: 2,
         background: showColor ? `${color}55` : '#CBD5E140',
-        padding: 1,
+        padding: 2,
       }}>
         {subconcepts.map((sub, i) => (
           <div key={i} style={{

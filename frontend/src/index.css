@@ -50,6 +50,10 @@
   }
 }
 
+input::placeholder {
+  color: #94A3B8;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;
