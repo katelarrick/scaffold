@@ -1,6 +1,6 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import {
-  ReactFlow, Controls, Background, BackgroundVariant,
+  ReactFlow, type ReactFlowInstance, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
   type NodeProps, type NodeTypes, type Node
 } from '@xyflow/react';
@@ -14,6 +14,7 @@ interface ConceptGraphProps {
   onConceptClick: (id: string) => void;
   starredIds: Set<string>;
   onStarClick: (id: string) => void;
+  onReset: () => void;
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -43,10 +44,6 @@ function LevelLegend() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'absolute',
-        top: 12,
-        right: 12,
-        zIndex: 10,
         background: 'rgba(255,255,255,0.92)',
         borderRadius: 10,
         borderTop:    '1.5px solid #1E293B',
@@ -88,6 +85,62 @@ function LevelLegend() {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ResetButton({ onReset }: { onReset: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={onReset}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'rgba(255,255,255,0.92)',
+        borderRadius: 10,
+        borderTop:    '1.5px solid #1E293B',
+        borderLeft:   '1.5px solid #1E293B',
+        borderRight:  '4px solid #1E293B',
+        borderBottom: '4px solid #1E293B',
+        padding: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        width: hovered ? 140 : 44,
+        transition: 'width 0.2s ease',
+        overflow: 'hidden',
+        cursor: 'pointer',
+      }}
+    >
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1E293B"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ flexShrink: 0 }}
+      >
+        <path d="M23 4v6h-6"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      <span style={{
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: 13,
+        fontWeight: 600,
+        color: '#1E293B',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        width: hovered ? 90 : 0,
+        opacity: hovered ? 1 : 0,
+        transition: 'width 0.2s ease, opacity 0.15s ease',
+      }}>
+        Reset Graph
+      </span>
     </div>
   );
 }
@@ -202,10 +255,19 @@ function MajorNode({ data }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset}: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
+
+  const rfInstance = useRef<ReactFlowInstance | null>(null);
+
+  const handleReset = useCallback(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    onReset();
+    setTimeout(() => rfInstance.current?.fitView({ padding: 0.08 }), 50);
+  }, [onReset, setNodes, setEdges]);
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
@@ -251,13 +313,17 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative'}}>
-      <LevelLegend />
+      <div style={{ position: 'absolute', alignItems: 'flex-end', top: 12, right: 12, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <LevelLegend />
+        <ResetButton onReset={handleReset} />
+      </div>
       <ReactFlow
         nodes={nodes} edges={edges}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         nodesConnectable={false}
         onNodeClick={onNodeClick}
+        onInit={(instance) => { rfInstance.current = instance; }}
         fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
       >
         <Controls />

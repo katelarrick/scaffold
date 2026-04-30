@@ -101,6 +101,15 @@ export default function App() {
     });
   };
 
+  const handleReset = () => {
+    setStarredIds(new Set());
+    setHighlightedIds(new Set());
+    setHighlightedSubconcepts(new Map());
+    setSelectedConceptId(null);
+    setActiveTab(null);
+    setSelectedQuestionId('');
+  };
+
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
   }
@@ -188,6 +197,7 @@ export default function App() {
           onConceptClick={setSelectedConceptId}
           starredIds={starredIds}
           onStarClick={handleStarClick}
+          onReset={handleReset}
         />
       </div>
 
