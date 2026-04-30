@@ -37,10 +37,13 @@ function MajorNode({ data }: NodeProps) {
 
   return (
     <div style={{
-      width: 220,
+      width: 250,
       borderRadius: 10,
       overflow: 'hidden',
-      border: `${highlighted && hasSelection ? 3 : 2}px solid ${showColor ? color : '#CBD5E1'}`,
+      borderTop:    `1.5px solid #1E293B`,
+      borderLeft:   `1.5px solid #1E293B`,
+      borderRight:  `4px solid #1E293B`,
+      borderBottom: `4px solid #1E293B`,
       boxShadow: highlighted && hasSelection
         ? `0 0 0 3px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
         : showColor
@@ -55,8 +58,10 @@ function MajorNode({ data }: NodeProps) {
 
       <div style={{
         background: showColor ? color : '#94A3B8',
-        color: '#fff', padding: '9px 14px',
-        textAlign: 'center', fontSize: 13, fontWeight: 700,
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        color: '#000000', padding: '9px 14px',
+        textAlign: 'left', fontSize: 23, fontWeight: 700,
+        whiteSpace: 'pre-line', 
         transition: 'background 0.25s',
       }}>
         {label}
@@ -71,7 +76,8 @@ function MajorNode({ data }: NodeProps) {
           <div key={i} style={{
             background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
             padding: '5px 6px', textAlign: 'center',
-            fontSize: 10, fontWeight: 500,
+            fontFamily: 'Helvetica, Arial, sans-serif',
+            fontSize: 15, fontWeight: 500,
             lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
           }}>
             {sub}
@@ -144,7 +150,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
         fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
       >
         <Controls />
-        <Background variant={BackgroundVariant.Dots} color='#0a6efc' gap={20} />
+        <Background variant={BackgroundVariant.Dots} color='#1E293B' gap={20} />
       </ReactFlow>
     </div>
   );

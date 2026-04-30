@@ -25,7 +25,7 @@ function computeSubgraph(taggedIds: string[]): Set<string> {
 }
 
 const selectStyle: React.CSSProperties = {
-  background: '#334155', color: '#fff',
+  background: '#fff', color: '#000000',
   border: '1px solid #475569', borderRadius: 6,
   padding: '5px 10px', fontSize: 13, cursor: 'pointer', minWidth: 200,
 };
@@ -96,12 +96,12 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', color: '#F8FAFC' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', color: '#f7ede1' }}>
 
       {/* ── Top bar ── */}
       <div style={{
         height: 52, flexShrink: 0,
-        background: '#0a6efc',
+        background: '#f4e87b',
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px',
       }}>
         <span style={{ color: '#fff', fontWeight: 800, fontSize: 16, marginRight: 4 }}>Scaffold</span>
@@ -118,7 +118,7 @@ export default function App() {
       </div>
 
       {/* ── Graph ── */}
-      <div style={{ flex: 1, minHeight: 0, background: '#f2f1f1' }}>
+      <div style={{ flex: 1, minHeight: 0, background: '#ffffff' }}>
         <ConceptGraph
           highlightedIds={highlightedIds}
           highlightedSubconcepts={highlightedSubconcepts}

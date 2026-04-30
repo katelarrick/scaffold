@@ -55,9 +55,9 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
     width: '100%',
     padding: '5px 10px',
     fontSize: 13,
-    background: disabled ? '#E2E8F0' : '#F8FAFC',
+    background: disabled ? '#ffffff' : '#ffffff',
     color: '#1E293B',
-    border: '1px solid #CBD5E1',
+    border: '1px solid #000000',
     borderRadius: 6,
     outline: 'none',
     cursor: disabled ? 'not-allowed' : 'text',
@@ -66,7 +66,7 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
 
   return (
   <div ref={containerRef} style={{ position: 'relative', minWidth: 240 }}>
-    
+
         {/* Input + clear button wrapper */}
         <div style={{ position: 'relative' }}>
         <input
@@ -78,7 +78,7 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
             if (e.key === 'Enter' && filtered.length > 0) handleSelect(filtered[0]);
             if (e.key === 'Escape') setIsOpen(false);
             }}
-            placeholder={disabled ? 'Select assessment first…' : 'Search questions…'}
+            placeholder={disabled ? 'Select assessment to pick question' : 'Search questions…'}
             disabled={disabled}
             style={{ ...inputStyle, paddingRight: inputValue ? 28 : 10 }}
         />
