@@ -65,7 +65,7 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
   };
 
   return (
-  <div ref={containerRef} style={{ position: 'relative', minWidth: 240 }}>
+  <div ref={containerRef} style={{ position: 'relative', minWidth: 220 }}>
 
         {/* Input + clear button wrapper */}
         <div style={{ position: 'relative' }}>
@@ -122,8 +122,8 @@ export default function QuestionSearch({ questions, selectedQuestionId, onSelect
                 key={q.id}
                 onMouseDown={() => handleSelect(q)}
                 style={{
-                padding: '8px 12px',
-                fontSize: 13,
+                padding: '4px 8px',
+                fontSize: 12,
                 cursor: 'pointer',
                 color: '#1E293B',
                 background: q.id === selectedQuestionId ? '#EFF6FF' : '#fff',

@@ -12,6 +12,8 @@ interface ConceptGraphProps {
   highlightedIds: Set<string>;
   highlightedSubconcepts: Map<string, Set<string>>;
   onConceptClick: (id: string) => void;
+  starredIds: Set<string>;
+  onStarClick: (id: string) => void;
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -31,6 +33,8 @@ function MajorNode({ data }: NodeProps) {
   const highlighted  = data.highlighted as boolean;
   const hasSelection = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
+  const starred = data.starred as boolean;
+  const onStarClick = data.onStarClick as () => void;
 
   // Show full color when no question is selected, or when this node is relevant
   const showColor = !hasSelection || highlighted;
@@ -45,7 +49,7 @@ function MajorNode({ data }: NodeProps) {
       borderRight:  `4px solid #1E293B`,
       borderBottom: `4px solid #1E293B`,
       boxShadow: highlighted && hasSelection
-        ? `0 0 0 3px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
+        ? `0 0 0 6px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
         : showColor
           ? '0 3px 12px rgba(0,0,0,0.18)'
           : '0 2px 8px rgba(0,0,0,0.1)',
@@ -58,13 +62,50 @@ function MajorNode({ data }: NodeProps) {
 
       <div style={{
         background: showColor ? color : '#94A3B8',
+        letterSpacing: '0.03em',
         fontFamily: 'Helvetica, Arial, sans-serif',
-        color: '#000000', padding: '9px 14px',
+        color: '#000000', 
+        paddingTop: '20px',
+        paddingBottom: '6px',
+        paddingLeft: '14px',
+        paddingRight: '14px',
         textAlign: 'left', fontSize: 23, fontWeight: 700,
         whiteSpace: 'pre-line', 
         transition: 'background 0.25s',
+        position: 'relative',
       }}>
         {label}
+        <div
+          onClick={e => { e.stopPropagation(); onStarClick(); }}
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            border: '2px solid #1E293B',
+            background: starred ? '#FACC15' : '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill={starred ? '#1E293B' : 'none'}
+            stroke="#1E293B"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </div>
       </div>
 
       <div style={{
@@ -94,7 +135,7 @@ function MajorNode({ data }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
@@ -108,9 +149,11 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       highlighted: highlightedIds.has(node.id),
       hasSelection,
       highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
+      starred: starredIds.has(node.id),
+      onStarClick: () => onStarClick(node.id),
     },
   })));
-}, [highlightedIds, hasSelection, highlightedSubconcepts, setNodes]);
+}, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, onStarClick, setNodes]);
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {
@@ -126,7 +169,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
         animated: isHighlighted,
         style: {
           stroke: isHighlighted ? color : '#CBD5E1',
-          strokeWidth: isHighlighted ? 2.5 : 1.5,
+          strokeWidth: isHighlighted ? 5 : 4,
           strokeDasharray: isHighlighted ? undefined : '5 3',
           opacity: isHighlighted ? 1 : 0.2,
         },

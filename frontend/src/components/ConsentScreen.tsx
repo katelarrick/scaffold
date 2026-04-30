@@ -42,15 +42,18 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
       <div style={{
         width: '100%', height: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#F8FAFC',
+        background: '#0ca6e9',
       }}>
         <div style={{
           background: '#fff', borderRadius: 12,
-          border: '1px solid #E2E8F0',
+          borderTop:    `1.5px solid #1E293B`,
+          borderLeft:   `1.5px solid #1E293B`,
+          borderRight:  `4px solid #1E293B`,
+          borderBottom: `4px solid #1E293B`,
           boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
           padding: '40px 48px', width: 360, textAlign: 'center',
         }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#1E293B', marginBottom: 8 }}>
+          <div style={{ fontSize: 28, fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 800, color: '#1E293B', marginBottom: 8 }}>
             Scaffold
           </div>
           <div style={{ fontSize: 14, color: '#64748B', marginBottom: 32 }}>

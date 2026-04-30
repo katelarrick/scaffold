@@ -47,6 +47,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'description' | 'example' | 'practice' | null>(null);
   const [studentPin, setStudentPin]   = useState<string | null>(null);
   const [_isTracked, setIsTracked]     = useState(false);
+  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
 
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
@@ -91,6 +92,14 @@ export default function App() {
     setIsTracked(consented);
   };
 
+  const handleStarClick = (id: string) => {
+    setStarredIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
   }
@@ -104,7 +113,7 @@ export default function App() {
         background: '#f4e87b',
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px',
       }}>
-        <span style={{ color: '#fff', fontWeight: 800, fontSize: 16, marginRight: 4 }}>Scaffold</span>
+        <span style={{ color: '#f76125', fontWeight: 1000, fontFamily: 'Helvetica, Arial, sans-serif', letterSpacing: '0.02em', fontSize: 25, marginRight: 4 }}>Scaffold</span>
         <select value={selectedAssessmentId} onChange={e => setSelectedAssessmentId(e.target.value)} style={selectStyle}>
           <option value="">Select assessment…</option>
           {assessments.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -123,14 +132,15 @@ export default function App() {
           highlightedIds={highlightedIds}
           highlightedSubconcepts={highlightedSubconcepts}
           onConceptClick={setSelectedConceptId}
+          starredIds={starredIds}
+          onStarClick={handleStarClick}
         />
       </div>
 
       {/* ── Bottom toolbar ── */}
       <div style={{
         flexShrink: 0,
-        background: '#fff',
-        borderTop: '1px solid #E2E8F0',
+        background: '#f4e87b',
         padding: '12px 20px',
         minHeight: 60,
         display: 'flex',
@@ -143,8 +153,11 @@ export default function App() {
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{
-                  background: selectedConcept.color, color: '#fff',
+                  background: selectedConcept.color, color: '#000000',
+                  fontFamily: 'Helvetica, Arial, sans-serif',
+                  letterSpacing: '0.03em',
                   fontWeight: 700, fontSize: 13,
+                  border: '1px solid #000000',
                   padding: '3px 10px', borderRadius: 4, marginRight: 6,
                 }}>
                   {selectedConcept.label}
@@ -154,9 +167,9 @@ export default function App() {
                     key={tab}
                     onClick={() => setActiveTab(activeTab === tab ? null : tab)}
                     style={{
-                      background: activeTab === tab ? selectedConcept.color : '#F1F5F9',
-                      color: activeTab === tab ? '#fff' : '#1E293B',
-                      border: `1px solid ${activeTab === tab ? selectedConcept.color : '#E2E8F0'}`,
+                      background: activeTab === tab ? selectedConcept.color : '#ffffff',
+                      color: activeTab === tab ? '#000000' : '#1E293B',
+                      border: `1px solid #000000`,
                       borderRadius: 6, padding: '5px 14px',
                       fontSize: 13, cursor: 'pointer', fontWeight: 500,
                     }}
@@ -171,8 +184,9 @@ export default function App() {
               {activeTab && (
                 <div style={{
                   marginTop: 12, padding: '10px 14px',
-                  background: '#F8FAFC', borderRadius: 8,
-                  border: '1px solid #E2E8F0',
+                  background: '#ffffff', borderRadius: 8,
+                  border: '1px solid #000000',
+                  fontFamily: 'Helvetica, Arial, sans-serif',
                   fontSize: 13, color: '#1E293B', lineHeight: 1.6, minHeight: 60,
                 }}>
                   {activeTab === 'description' && `Description for "${selectedConcept.label}" will appear here.`}
@@ -187,7 +201,7 @@ export default function App() {
               onClick={() => { setSelectedConceptId(null); setActiveTab(null); }}
               style={{
                 background: 'none', border: 'none',
-                cursor: 'pointer', color: '#94A3B8',
+                cursor: 'pointer', color: '#000000',
                 fontSize: 20, lineHeight: 1,
                 padding: '0 4px', flexShrink: 0,
               }}
@@ -197,7 +211,7 @@ export default function App() {
             </button>
           </>
         ) : (
-          <div style={{ color: '#94A3B8', fontSize: 13, lineHeight: '36px' }}>
+          <div style={{ color: '#000000', fontSize: 13, lineHeight: '36px' }}>
             {selectedQuestionId
               ? 'Click a concept card to explore it.'
               : 'Select a question, or click any concept card to explore it.'}

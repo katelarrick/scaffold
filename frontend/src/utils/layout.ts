@@ -45,7 +45,7 @@ export function buildGraphElements(): { nodes: Node[]; edges: Edge[] } {
     sourceHandle: 'top',
     targetHandle: 'bottom',
     type: 'dashed',
-    style: { stroke:  majorConcepts.find(c => c.id === e.source)?.color, strokeWidth: 2},
+    style: { stroke:  majorConcepts.find(c => c.id === e.source)?.color, strokeWidth: 4},
     markerEnd: { type: MarkerType.ArrowClosed, color: majorConcepts.find(c => c.id === e.source)?.color},
 
   }));
