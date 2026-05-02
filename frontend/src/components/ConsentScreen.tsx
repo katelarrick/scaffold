@@ -11,14 +11,14 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
   const [loading, setLoading] = useState(false);
 
   const handlePinSubmit = async () => {
-    if (pin.length !== 3) return;
+    if (pin.length !== 7) return;
     setLoading(true);
     setError('');
     const valid = await validatePin(pin);
     if (valid) {
       onComplete(pin, true);
     } else {
-      setError('Invalid PIN. Please check your study ID and try again.');
+      setError('Invalid perm number.');
     }
     setLoading(false);
   };
@@ -41,17 +41,17 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
         <div style={{ fontSize: 28, fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 800, color: '#1E293B', marginBottom: 8 }}>
           Scaffold
         </div>
-        <div style={{ fontSize: 14, color: '#64748B', marginBottom: 32 }}>
-          Enter your 3-digit ID to continue.
+        <div style={{ fontSize: 14, color: '#64748B', marginBottom: 20, marginTop: 20 }}>
+          Enter your UCSB perm number to continue.
         </div>
         <input
           type="text"
           inputMode="numeric"
-          maxLength={3}
+          maxLength={7}
           value={pin}
           onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
           onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
-          placeholder="000"
+          placeholder="0000000"
           style={{
             width: '100%', padding: '10px 14px', fontSize: 24,
             textAlign: 'center', letterSpacing: '0.3em',
@@ -65,12 +65,12 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
         )}
         <button
           onClick={handlePinSubmit}
-          disabled={pin.length !== 3 || loading}
+          disabled={pin.length !== 7 || loading}
           style={{
             width: '100%', padding: '10px 0', fontSize: 14, fontWeight: 600,
-            background: pin.length === 3 ? '#1E293B' : '#CBD5E1',
+            background: pin.length === 7 ? '#1E293B' : '#CBD5E1',
             color: '#fff', border: 'none', borderRadius: 8,
-            cursor: pin.length === 3 ? 'pointer' : 'default',
+            cursor: pin.length === 7 ? 'pointer' : 'default',
           }}
         >
           {loading ? 'Checking…' : 'Continue'}

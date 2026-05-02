@@ -189,7 +189,7 @@ export default function App() {
             letterSpacing: '0.03em',
             whiteSpace: 'nowrap',
           }}>
-            {starredIds.size} / 20
+            {starredIds.size} / 26
           </span>
         </div>
       </div>
