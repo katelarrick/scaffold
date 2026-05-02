@@ -1,53 +1,70 @@
-import dagre from '@dagrejs/dagre';
 import { type Node, type Edge, MarkerType, Position } from '@xyflow/react';
 import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
 
-const MAJOR_W  = 220;
-const HEADER_H = 38;
-const SUB_ROW_H = 34;
+const positions: Record<string, { x: number; y: number }> = {
+  // Row 0 — top (most advanced)
+  'files':             { x: 820,  y: 0    },
+  'modules':           { x: 1130, y: 0    },
+  'testing':           { x: 1440, y: 0    },
+  'errors-debugging':  { x: 1750, y: 0    },
+  // Row 1
+  'main-fn':           { x: 645,  y: 290  },
+  'nested-loops':      { x: 955,  y: 290  },
+  'input-output':      { x: 1265, y: 290  },
+  'string-methods':    { x: 1575, y: 290  },
+  'recursion':         { x: 1885, y: 290  },
+  // Row 2
+  'conditionals':      { x: 490,  y: 590  },
+  'loops':             { x: 800,  y: 590  },
+  'built-in-fns':      { x: 1110, y: 590  },
+  'nested-lists':      { x: 1420, y: 590  },
+  'methods':           { x: 1730, y: 590  },
+  'mutability':        { x: 2040, y: 590  },
+  // Row 3
+  'arithmetic-ops':    { x: 335,  y: 950  },
+  'boolean-expr':      { x: 645,  y: 950  },
+  'functions':         { x: 955,  y: 950  },
+  'lists':             { x: 1265, y: 950  },
+  'dictionaries':      { x: 1575, y: 950  },
+  'tuples':            { x: 1885, y: 950  },
+  'sets':              { x: 2195, y: 950  },
+  // Row 4
+  'data-rep':          { x: 955,  y: 1270 },
+  'variables':         { x: 1265, y: 1270 },
+  'string-ops':        { x: 1575, y: 1270 },
+  // Row 5 — bottom (most basic)
+  'data-types':        { x: 1265, y: 1520 },
+};
 
 export function buildGraphElements(): { nodes: Node[]; edges: Edge[] } {
-  const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'BT', ranksep: 120, nodesep: 100 });
+  const nodes: Node[] = majorConcepts.map(concept => ({
+    id:   concept.id,
+    type: 'major',
+    position: positions[concept.id] ?? { x: 0, y: 0 },
+    data: {
+      label:       concept.label,
+      color:       concept.color,
+      subconcepts: concept.subconcepts,
+    },
+    sourcePosition: Position.Top,
+    targetPosition: Position.Bottom,
+  }));
 
-  majorConcepts.forEach(c => {
-    const rows = c.subconcepts.length;
-    const h = HEADER_H + rows * SUB_ROW_H + 4;   // +4 for border gaps
-    g.setNode(c.id, { width: MAJOR_W, height: h });
-  });
-
-  prereqEdgeData.forEach(e => g.setEdge(e.source, e.target));
-  dagre.layout(g);
-
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
-
-  majorConcepts.forEach(concept => {
-    const { x, y, width, height } = g.node(concept.id);
-    nodes.push({
-      id: concept.id,
-      type: 'major',
-      position: { x: x - width / 2, y: y - height / 2 },
-      data: {
-        label: concept.label,
-        color: concept.color,
-        subconcepts: concept.subconcepts,
-      },
-      sourcePosition: Position.Top,
-      targetPosition: Position.Bottom,
-    });
-  });
-
-  prereqEdgeData.forEach(e => edges.push({
-    id: `prereq-${e.source}-${e.target}`,
-    source: e.source,
-    target: e.target,
+  const edges: Edge[] = prereqEdgeData.map(e => ({
+    id:           `prereq-${e.source}-${e.target}`,
+    source:        e.source,
+    target:        e.target,
     sourceHandle: 'top',
     targetHandle: 'bottom',
-    type: 'dashed',
-    style: { stroke:  majorConcepts.find(c => c.id === e.source)?.color, strokeWidth: 4},
-    markerEnd: { type: MarkerType.ArrowClosed, color: majorConcepts.find(c => c.id === e.source)?.color},
-
+    type:         'smooth',
+    style: {
+      stroke:          majorConcepts.find(c => c.id === e.source)?.color,
+      strokeWidth:     4,
+    },
+    markerEnd: {
+      type:  MarkerType.ArrowClosed,
+      color: majorConcepts.find(c => c.id === e.source)?.color,
+    },
   }));
 
   return { nodes, edges };

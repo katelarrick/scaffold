@@ -2,7 +2,7 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import {
   ReactFlow, type ReactFlowInstance, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
-  type NodeProps, type NodeTypes, type Node
+  type NodeProps, type NodeTypes, type Node, type Edge
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { buildGraphElements } from '../utils/layout';
@@ -38,7 +38,6 @@ const LEVELS = [
 
 function LevelLegend() {
   const [hovered, setHovered] = useState(false);
-
   return (
     <div
       onMouseEnter={() => setHovered(true)}
@@ -63,22 +62,14 @@ function LevelLegend() {
       {LEVELS.map((level, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
-            width: 22,
-            height: 22,
-            borderRadius: 5,
-            background: level.color,
-            border: '1.5px solid #1E293B',
-            flexShrink: 0,
+            width: 22, height: 22, borderRadius: 5,
+            background: level.color, border: '1.5px solid #1E293B', flexShrink: 0,
           }} />
           <span style={{
             fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#1E293B',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            width: hovered ? 72 : 0,
-            opacity: hovered ? 1 : 0,
+            fontSize: 13, fontWeight: 600, color: '#1E293B',
+            whiteSpace: 'nowrap', overflow: 'hidden',
+            width: hovered ? 72 : 0, opacity: hovered ? 1 : 0,
             transition: 'width 0.2s ease, opacity 0.15s ease',
           }}>
             {level.label}
@@ -91,7 +82,6 @@ function LevelLegend() {
 
 function ResetButton({ onReset }: { onReset: () => void }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <div
       onClick={onReset}
@@ -114,15 +104,8 @@ function ResetButton({ onReset }: { onReset: () => void }) {
         cursor: 'pointer',
       }}
     >
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#1E293B"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+        stroke="#1E293B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         style={{ flexShrink: 0 }}
       >
         <path d="M23 4v6h-6"/>
@@ -130,13 +113,9 @@ function ResetButton({ onReset }: { onReset: () => void }) {
       </svg>
       <span style={{
         fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13,
-        fontWeight: 600,
-        color: '#1E293B',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        width: hovered ? 180 : 0,
-        opacity: hovered ? 1 : 0,
+        fontSize: 13, fontWeight: 600, color: '#1E293B',
+        whiteSpace: 'nowrap', overflow: 'hidden',
+        width: hovered ? 180 : 0, opacity: hovered ? 1 : 0,
         transition: 'width 0.2s ease, opacity 0.15s ease',
       }}>
         Click to reset graph
@@ -146,32 +125,29 @@ function ResetButton({ onReset }: { onReset: () => void }) {
 }
 
 function MajorNode({ data }: NodeProps) {
-  const color        = data.color as string;
-  const label        = data.label as string;
-  const subconcepts  = data.subconcepts as string[];
-  const highlighted  = data.highlighted as boolean;
-  const hasSelection = data.hasSelection as boolean;
+  const color                  = data.color as string;
+  const label                  = data.label as string;
+  const subconcepts            = data.subconcepts as string[];
+  const highlighted            = data.highlighted as boolean;
+  const hasSelection           = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
-  const starred = data.starred as boolean;
-  const onStarClick = data.onStarClick as () => void;
+  const starred                = data.starred as boolean;
+  const onStarClick            = data.onStarClick as () => void;
 
-  // Show full color when no question is selected, or when this node is relevant
   const showColor = !hasSelection || highlighted;
 
   return (
     <div style={{
-      width: 250,
+      width: 270,
       borderRadius: 10,
       overflow: 'hidden',
-      borderTop:    `1.5px solid #1E293B`,
-      borderLeft:   `1.5px solid #1E293B`,
-      borderRight:  `4px solid #1E293B`,
-      borderBottom: `4px solid #1E293B`,
+      borderTop:    '1.5px solid #1E293B',
+      borderLeft:   '1.5px solid #1E293B',
+      borderRight:  '4px solid #1E293B',
+      borderBottom: '4px solid #1E293B',
       boxShadow: highlighted && hasSelection
         ? `0 0 0 6px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
-        : showColor
-          ? '0 3px 12px rgba(0,0,0,0.18)'
-          : '0 2px 8px rgba(0,0,0,0.1)',
+        : showColor ? '0 3px 12px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.1)',
       opacity: hasSelection && !highlighted ? 0.25 : 1,
       cursor: 'pointer',
       transition: 'opacity 0.25s, box-shadow 0.25s',
@@ -183,14 +159,12 @@ function MajorNode({ data }: NodeProps) {
         background: showColor ? color : '#94A3B8',
         letterSpacing: '0.03em',
         fontFamily: 'Helvetica, Arial, sans-serif',
-        color: '#000000', 
-        paddingTop: '27px',
-        paddingBottom: '6px',
-        paddingLeft: '14px',
-        paddingRight: '14px',
-        lineHeight: 1.1,
-        textAlign: 'left', fontSize: 28, fontWeight: 700,
-        whiteSpace: 'pre-line', 
+        color: '#000000',
+        paddingTop: '27px', paddingBottom: '6px',
+        paddingLeft: '14px', paddingRight: '14px',
+        lineHeight: 1.1, textAlign: 'left',
+        fontSize: 28, fontWeight: 700,
+        whiteSpace: 'pre-line',
         transition: 'background 0.25s',
         position: 'relative',
       }}>
@@ -198,30 +172,17 @@ function MajorNode({ data }: NodeProps) {
         <div
           onClick={e => { e.stopPropagation(); onStarClick(); }}
           style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            width: 28,
-            height: 28,
-            borderRadius: 6,
+            position: 'absolute', top: 12, right: 12,
+            width: 28, height: 28, borderRadius: 6,
             border: '2px solid #1E293B',
             background: starred ? '#FACC15' : '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0,
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill={starred ? '#1E293B' : 'none'}
-            stroke="#1E293B"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <svg width="14" height="14" viewBox="0 0 24 24"
+            fill={starred ? '#1E293B' : 'none'} stroke="#1E293B"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
@@ -255,12 +216,12 @@ function MajorNode({ data }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset}: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
 
-  const rfInstance = useRef<ReactFlowInstance | null>(null);
+  const rfInstance = useRef<ReactFlowInstance<Node, Edge> | null>(null);
 
   const handleReset = useCallback(() => {
     setNodes(initialNodes);
@@ -271,18 +232,18 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
-  setNodes(nds => nds.map(node => ({
-    ...node,
-    data: {
-      ...node.data,
-      highlighted: highlightedIds.has(node.id),
-      hasSelection,
-      highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
-      starred: starredIds.has(node.id),
-      onStarClick: () => onStarClick(node.id),
-    },
-  })));
-}, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, onStarClick, setNodes]);
+    setNodes(nds => nds.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        highlighted:            highlightedIds.has(node.id),
+        hasSelection,
+        highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
+        starred:                starredIds.has(node.id),
+        onStarClick:            () => onStarClick(node.id),
+      },
+    })));
+  }, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, onStarClick, setNodes]);
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {
@@ -312,8 +273,12 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
   }, [onConceptClick]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative'}}>
-      <div style={{ position: 'absolute', alignItems: 'flex-end', top: 12, right: 12, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div style={{
+        position: 'absolute', alignItems: 'flex-end',
+        top: 12, right: 12, zIndex: 10,
+        display: 'flex', flexDirection: 'column', gap: 8,
+      }}>
         <ResetButton onReset={handleReset} />
         <LevelLegend />
       </div>
@@ -323,7 +288,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
         nodeTypes={nodeTypes}
         nodesConnectable={false}
         onNodeClick={onNodeClick}
-        onInit={(instance) => { rfInstance.current = instance; }}
+        onInit={(instance: ReactFlowInstance<Node, Edge>) => { rfInstance.current = instance; }}
         fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
       >
         <Controls />
