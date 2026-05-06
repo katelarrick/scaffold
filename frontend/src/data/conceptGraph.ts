@@ -19,7 +19,7 @@ export const majorConcepts: MajorConcept[] = [
   { id: 'boolean-expr',      label: 'Boolean \n Expressions',     color: '#93ebff',
     subconcepts: ['Logical: and, or, not', 'Comparison: ==, <, >, <=, >=, !=', 'Membership: in, not in'] },
   { id: 'conditionals',      label: 'Conditional \n Statements',  color: '#fe9a71',
-    subconcepts: ['If', 'Else', 'Elif'] },
+    subconcepts: ['if', 'else', 'elif'] },
   { id: 'functions',         label: 'Functions',                  color: '#93ebff',
     subconcepts: ['Defining functions', 'Calling functions', 'Function parameters', 'Return statements'] },
   { id: 'built-in-fns',      label: 'Built-in \n Functions',      color: '#fe9a71',
