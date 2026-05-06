@@ -11,7 +11,7 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
   const [loading, setLoading] = useState(false);
 
   const handlePinSubmit = async () => {
-    if (pin.length !== 7) return;
+    if (pin.length !== 4) return;
     setLoading(true);
     setError('');
     const valid = await validatePin(pin);
@@ -42,16 +42,16 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
           Scaffold
         </div>
         <div style={{ fontSize: 14, color: '#64748B', marginBottom: 20, marginTop: 20 }}>
-          Enter your UCSB perm number to continue.
+          Enter your assigned 4-digit pin to continue.
         </div>
         <input
           type="text"
           inputMode="numeric"
-          maxLength={7}
+          maxLength={4}
           value={pin}
           onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
           onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
-          placeholder="0000000"
+          placeholder="0000"
           style={{
             width: '100%', padding: '10px 14px', fontSize: 24,
             textAlign: 'center', letterSpacing: '0.3em',
@@ -65,12 +65,12 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
         )}
         <button
           onClick={handlePinSubmit}
-          disabled={pin.length !== 7 || loading}
+          disabled={pin.length !== 4 || loading}
           style={{
             width: '100%', padding: '10px 0', fontSize: 14, fontWeight: 600,
-            background: pin.length === 7 ? '#1E293B' : '#CBD5E1',
+            background: pin.length === 4 ? '#1E293B' : '#CBD5E1',
             color: '#fff', border: 'none', borderRadius: 8,
-            cursor: pin.length === 7 ? 'pointer' : 'default',
+            cursor: pin.length === 4 ? 'pointer' : 'default',
           }}
         >
           {loading ? 'Checking…' : 'Continue'}
