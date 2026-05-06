@@ -274,7 +274,7 @@ export default function App() {
 
               {/* Close button */}
               <div
-                onClick={() => { setSelectedConceptId(null); setSelectedItem(null); }}
+                onClick={() => { setSelectedConceptId(null); setSelectedItem(null); setCloseHovered(false); }}
                 onMouseEnter={() => setCloseHovered(true)}
                 onMouseLeave={() => setCloseHovered(false)}
                 style={{
