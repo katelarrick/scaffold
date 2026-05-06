@@ -9,6 +9,13 @@ import AssessmentSelect from './components/AssessmentSelect';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
+function toPastel(hex: string, strength: number = 0.1): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${Math.round(r * strength + 255 * (1 - strength))}, ${Math.round(g * strength + 255 * (1 - strength))}, ${Math.round(b * strength + 255 * (1 - strength))})`;
+}
+
 // Walk the prereq graph upward from tagged concepts to include all ancestors
 function computeSubgraph(taggedIds: string[]): Set<string> {
   const result = new Set<string>(taggedIds);
@@ -25,18 +32,6 @@ function computeSubgraph(taggedIds: string[]): Set<string> {
   return result;
 }
 
-// const selectStyle: React.CSSProperties = {
-//   background: '#fff', color: '#000000',
-//   border: '1px solid #475569', borderRadius: 6,
-//   padding: '5px 10px', fontSize: 13, cursor: 'pointer', minWidth: 200,
-// };
-
-// const btnStyle: React.CSSProperties = {
-//   background: '#334155', color: '#fff',
-//   border: '1px solid #475569', borderRadius: 6,
-//   padding: '6px 16px', fontSize: 13, cursor: 'pointer', marginRight: 8,
-// };
-
 export default function App() {
   const [assessments, setAssessments]               = useState<Assessment[]>([]);
   const [questions, setQuestions]                   = useState<Question[]>([]);
@@ -45,7 +40,7 @@ export default function App() {
   const [highlightedIds, setHighlightedIds]         = useState<Set<string>>(new Set());
   const [selectedConceptId, setSelectedConceptId]   = useState<string | null>(null);
   const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
-  const [activeTab, setActiveTab] = useState<'description' | 'example' | 'practice' | null>(null);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [studentPin, setStudentPin]   = useState<string | null>(null);
   const [_isTracked, setIsTracked]     = useState(false);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
@@ -80,9 +75,8 @@ export default function App() {
     setSelectedConceptId(null);
   }, [selectedQuestionId]);
 
-    //Reset activeTab when selected concept changes
     useEffect(() => {
-      setActiveTab(null);
+      setSelectedItem(null);
     }, [selectedConceptId]);
 
   const selectedConcept = selectedConceptId
@@ -107,9 +101,10 @@ export default function App() {
     setHighlightedIds(new Set());
     setHighlightedSubconcepts(new Map());
     setSelectedConceptId(null);
-    setActiveTab(null);
+    setSelectedItem(null);
     setSelectedQuestionId('');
   };
+
 
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
@@ -207,108 +202,159 @@ export default function App() {
       </div>
 
       {/* ── Bottom toolbar ── */}
-      <div style={{
-        flexShrink: 0,
-        background: '#f4e87b',
-        padding: '12px 20px',
-        minHeight: 60,
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 12,
-      }}>
-        {selectedConcept ? (
-          <>
-            {/* Existing content — concept label + buttons + content area */}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{
-                  background: selectedConcept.color, color: '#000000',
+      <div style={{ flexShrink: 0, background: '#f4e87b' }}>
+
+        {/* Main toolbar row */}
+        <div style={{
+          padding: '12px 20px 6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          minHeight: 60,
+        }}>
+          {selectedConcept ? (
+            <>
+              {/* Main concept button */}
+              <button
+                onClick={() => setSelectedItem(
+                  selectedItem === selectedConcept.id ? null : selectedConcept.id
+                )}
+                style={{
+                  background: selectedItem === selectedConcept.id
+                    ? selectedConcept.color : '#ffffff',
+                  color: '#000000',
+                  borderTop:    '1.5px solid #1E293B',
+                  borderLeft:   '1.5px solid #1E293B',
+                  borderRight:  '4px solid #1E293B',
+                  borderBottom: '4px solid #1E293B',
+                  //border: '1px solid #000000',
+                  borderRadius: 6,
+                  padding: '5px 14px',
+                  fontSize: 15, fontWeight: 700,
                   fontFamily: 'Helvetica, Arial, sans-serif',
-                  letterSpacing: '0.03em',
-                  fontWeight: 700, fontSize: 13,
-                  border: '1px solid #000000',
-                  padding: '3px 10px', borderRadius: 4, marginRight: 6,
-                }}>
-                  {selectedConcept.label}
-                </span>
-                {(['description', 'example', 'practice'] as const).map(tab => (
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {selectedConcept.label.replace(/\n/g, ' ')}
+              </button>
+
+              {/* Divider */}
+              <div style={{
+                width: 1, alignSelf: 'stretch',
+                background: '#00000033', flexShrink: 0,
+              }} />
+
+              {/* Subconcept buttons */}
+              <div style={{
+                flex: 1,
+                display: 'flex', flexWrap: 'wrap', gap: 8,
+                alignItems: 'flex-start',
+              }}>
+                {selectedConcept.subconcepts.map(sub => (
                   <button
-                    key={tab}
-                    onClick={() => setActiveTab(activeTab === tab ? null : tab)}
+                    key={sub}
+                    onClick={() => setSelectedItem(selectedItem === sub ? null : sub)}
                     style={{
-                      background: activeTab === tab ? selectedConcept.color : '#ffffff',
-                      color: activeTab === tab ? '#000000' : '#1E293B',
-                      border: `1px solid #000000`,
-                      borderRadius: 6, padding: '5px 14px',
-                      fontSize: 13, cursor: 'pointer', fontWeight: 500,
+                      background: selectedItem === sub ? selectedConcept.color : '#ffffff',
+                      color: '#000000',
+                      border: '1px solid #000000',
+                      borderRadius: 6,
+                      padding: '5px 14px',
+                      fontSize: 14, fontWeight: 500,
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      cursor: 'pointer',
                     }}
                   >
-                    {tab === 'description' && 'Show Description'}
-                    {tab === 'example'     && 'Get Example'}
-                    {tab === 'practice'    && 'Practice with a PrairieLearn question'}
+                    {sub.replace(/\n/g, ' ')}
                   </button>
                 ))}
               </div>
 
-              {activeTab && (
-                <div style={{
-                  marginTop: 12, padding: '10px 14px',
-                  background: '#ffffff', borderRadius: 8,
-                  border: '1px solid #000000',
-                  fontFamily: 'Helvetica, Arial, sans-serif',
-                  fontSize: 13, color: '#1E293B', lineHeight: 1.6, minHeight: 60,
-                }}>
-                  {activeTab === 'description' && `Description for "${selectedConcept.label}" will appear here.`}
-                  {activeTab === 'example'     && `Example for "${selectedConcept.label}" will appear here.`}
-                  {activeTab === 'practice'    && `PrairieLearn practice question for "${selectedConcept.label}" will appear here.`}
-                </div>
-              )}
-            </div>
-
-            {/* Close button */}
-            <div
-              onClick={() => { setSelectedConceptId(null); setActiveTab(null); }}
-              onMouseEnter={() => setCloseHovered(true)}
-              onMouseLeave={() => setCloseHovered(false)}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                borderTop:    '1.5px solid #1E293B',
-                borderLeft:   '1.5px solid #1E293B',
-                borderRight:  '4px solid #1E293B',
-                borderBottom: '4px solid #1E293B',
-                background: closeHovered ? '#ef4444' : '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: 'background 0.15s',
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={closeHovered ? '#ffffff' : '#1E293B'}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              {/* Close button */}
+              <div
+                onClick={() => { setSelectedConceptId(null); setSelectedItem(null); }}
+                onMouseEnter={() => setCloseHovered(true)}
+                onMouseLeave={() => setCloseHovered(false)}
+                style={{
+                  width: 28, height: 28, borderRadius: 6,
+                  borderTop:    '1.5px solid #1E293B',
+                  borderLeft:   '1.5px solid #1E293B',
+                  borderRight:  '4px solid #1E293B',
+                  borderBottom: '4px solid #1E293B',
+                  background: closeHovered ? '#ef4444' : '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', flexShrink: 0,
+                  transition: 'background 0.15s',
+                }}
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke={closeHovered ? '#ffffff' : '#1E293B'}
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </div>
+            </>
+          ) : (
+            <div style={{ color: '#000000', fontSize: 13, lineHeight: '36px' }}>
+              {selectedQuestionId
+                ? 'Click a concept card to explore it.'
+                : 'Select a question, or click any concept card to explore it.'}
             </div>
-          </>
-        ) : (
-          <div style={{ color: '#000000', fontSize: 13, lineHeight: '36px' }}>
-            {selectedQuestionId
-              ? 'Click a concept card to explore it.'
-              : 'Select a question, or click any concept card to explore it.'}
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Expanded cards — only shown when a button is clicked */}
+        {selectedConcept && selectedItem !== null && (() => {
+          const selectedItemLabel = selectedItem === selectedConcept.id
+            ? selectedConcept.label.replace(/\n/g, ' ')
+            : selectedItem ?? '';
+
+          return (
+            <div style={{ padding: '0 20px 20px', display: 'flex', gap: 12 }}>
+              {[
+                { label: 'Description',           key: 'description' },
+                { label: 'Example',               key: 'example'     },
+                { label: 'PrairieLearn Practice', key: 'practice'    },
+              ].map(card => (
+                <div key={card.key} style={{
+                  flex: 1,
+                  background: toPastel(selectedConcept.color),
+                  borderRadius: 8,
+                  border: '1px solid #000000',
+                  padding: '10px 14px',
+                  textAlign: 'left',
+                }}>
+                  <span style={{
+                    background: selectedConcept.color,
+                    borderRadius: 100,
+                    padding: '2px 10px',
+                    border: '1px solid #000000',
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: 12, fontWeight: 700, color: '#000000',
+                    whiteSpace: 'nowrap',
+                    width: 'fit-content',
+                    display: 'inline-block',
+                    marginBottom: 8,
+                  }}>
+                    {card.label}
+                  </span>
+                  <div style={{
+                    fontFamily: 'Helvetica, Arial, sans-serif',
+                    fontSize: 13, color: '#1E293B',
+                    lineHeight: 1.6,
+                    paddingLeft: 8,
+                  }}>
+                    {`${card.label} for "${selectedItemLabel}" will appear here.`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
     </div>
