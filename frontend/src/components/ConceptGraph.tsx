@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useRef, createContext, useContext } from 'react';
 import {
   ReactFlow, type ReactFlowInstance, Controls, Background, BackgroundVariant,
-  useNodesState, useEdgesState, Handle, Position, MarkerType,
+  useNodesState, useEdgesState, Handle, Position, MarkerType, type NodeChange,
   type NodeProps, type NodeTypes, type Node, type Edge
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -28,6 +28,7 @@ interface ConceptGraphProps {
   }) => void;
   onDetailDeleted?: (cardType: string, itemLabel: string) => void;
   restoredDetailCards?: SavedDetailCard[];
+  onDetailMoved?: (cardType: string, itemLabel: string, posX: number, posY: number) => void;
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -314,11 +315,13 @@ function DetailNode({ data, id }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved}: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
   const restoredRef = useRef(false);
+  const nodesRef = useRef(nodes);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
 
   useEffect(() => {
     if (restoredRef.current || !restoredDetailCards?.length) return;
@@ -461,6 +464,23 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     onConceptClick(node.id);
   }, [onConceptClick]);
 
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    onNodesChange(changes);
+    changes.forEach(change => {
+      if (change.type === 'position' && change.dragging === false && change.position) {
+        const node = nodesRef.current.find(n => n.id === change.id);
+        if (node?.type === 'detail') {
+          onDetailMoved?.(
+            node.data.cardType as string,
+            node.data.itemLabel as string,
+            change.position.x,
+            change.position.y,
+          );
+        }
+      }
+    });
+  }, [onNodesChange, onDetailMoved]);
+
   return (
     <DeleteDetailContext.Provider value={handleDeleteDetail}>
       <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -474,7 +494,8 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
         </div>
         <ReactFlow
           nodes={nodes} edges={edges}
-          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+          onNodesChange={handleNodesChange} 
+          onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           nodesConnectable={false}
           onNodeClick={onNodeClick}

@@ -197,6 +197,18 @@ export default function App() {
     });
   };
 
+  const handleDetailMoved = (cardType: string, itemLabel: string, posX: number, posY: number) => {
+    setSavedDetailCards(prev => {
+      const next = prev.map(c =>
+        c.cardType === cardType && c.itemLabel === itemLabel
+          ? { ...c, posX, posY }
+          : c
+      );
+      persistState(studentPin!, starredIdsRef.current, next);
+      return next;
+    });
+  };
+
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
   }
@@ -292,6 +304,7 @@ export default function App() {
           restoredDetailCards={initialDetailCards}
           onDetailAdded={handleDetailAdded}
           onDetailDeleted={handleDetailDeleted}
+          onDetailMoved={handleDetailMoved}
         />
       </div>
 
