@@ -105,6 +105,20 @@ export default function App() {
     setSelectedQuestionId('');
   };
 
+  const [addedDetailKeys, setAddedDetailKeys] = useState<Set<string>>(new Set());
+
+  const handleDetailAdded = (cardType: string, itemLabel: string) => {
+    setAddedDetailKeys(prev => new Set(prev).add(`${cardType}:${itemLabel}`));
+  };
+
+  const handleDetailDeleted = (cardType: string, itemLabel: string) => {
+    setAddedDetailKeys(prev => {
+      const next = new Set(prev);
+      next.delete(`${cardType}:${itemLabel}`);
+      return next;
+    });
+  };
+
 
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
@@ -198,6 +212,8 @@ export default function App() {
           starredIds={starredIds}
           onStarClick={handleStarClick}
           onReset={handleReset}
+          onDetailAdded={handleDetailAdded}
+        onDetailDeleted={handleDetailDeleted}
         />
       </div>
 
@@ -319,39 +335,57 @@ export default function App() {
                 { label: 'Description',           key: 'description' },
                 { label: 'Example',               key: 'example'     },
                 { label: 'PrairieLearn Practice', key: 'practice'    },
-              ].map(card => (
-                <div key={card.key} style={{
-                  flex: 1,
-                  background: toPastel(selectedConcept.color),
-                  borderRadius: 8,
-                  border: '1px solid #000000',
-                  padding: '10px 14px',
-                  textAlign: 'left',
-                }}>
-                  <span style={{
-                    background: selectedConcept.color,
-                    borderRadius: 100,
-                    padding: '2px 10px',
-                    border: '1px solid #000000',
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: 12, fontWeight: 700, color: '#000000',
-                    whiteSpace: 'nowrap',
-                    width: 'fit-content',
-                    display: 'inline-block',
-                    marginBottom: 8,
-                  }}>
-                    {card.label}
-                  </span>
-                  <div style={{
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: 13, color: '#1E293B',
-                    lineHeight: 1.6,
-                    paddingLeft: 8,
-                  }}>
-                    {`${card.label} for "${selectedItemLabel}" will appear here.`}
+              ].map(card => {
+                const isAdded = addedDetailKeys.has(`${card.label}:${selectedItemLabel}`);
+                return (
+                  <div
+                    key={card.key}
+                    draggable={!isAdded}
+                    onDragStart={isAdded ? undefined : e => {
+                      e.dataTransfer.setData('application/scaffold-card', JSON.stringify({
+                        cardType:     card.label,
+                        itemLabel:    selectedItemLabel,
+                        conceptId:    selectedConcept.id,
+                        conceptColor: selectedConcept.color,
+                      }));
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    style={{
+                      flex: 1,
+                      background: toPastel(selectedConcept.color),
+                      borderRadius: 8,
+                      border: '1px solid #000000',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      cursor: isAdded ? 'default' : 'grab',
+                      opacity: isAdded ? 0.8 : 1,
+                    }}
+                  >
+                    <span style={{
+                      background: selectedConcept.color,
+                      borderRadius: 100,
+                      padding: '2px 10px',
+                      border: '1px solid #000000',
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      fontSize: 12, fontWeight: 700, color: '#000000',
+                      whiteSpace: 'nowrap',
+                      width: 'fit-content',
+                      display: 'inline-block',
+                      marginBottom: 8,
+                    }}>
+                      {card.label}
+                    </span>
+                    <div style={{
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      fontSize: 13, color: '#1E293B',
+                      lineHeight: 1.6,
+                      paddingLeft: 8,
+                    }}>
+                      {`${card.label} for "${selectedItemLabel}" will appear here.`}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}
