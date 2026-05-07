@@ -8,6 +8,12 @@ import '@xyflow/react/dist/style.css';
 import { buildGraphElements } from '../utils/layout';
 import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
 
+interface SavedDetailCard {
+  cardType: string; itemLabel: string;
+  conceptId: string; conceptColor: string;
+  posX: number; posY: number;
+}
+
 interface ConceptGraphProps {
   highlightedIds: Set<string>;
   highlightedSubconcepts: Map<string, Set<string>>;
@@ -15,8 +21,13 @@ interface ConceptGraphProps {
   starredIds: Set<string>;
   onStarClick: (id: string) => void;
   onReset: () => void;
-  onDetailAdded?: (cardType: string, itemLabel: string) => void;
+  onDetailAdded?: (card: {
+    cardType: string; itemLabel: string;
+    conceptId: string; conceptColor: string;
+    posX: number; posY: number;
+  }) => void;
   onDetailDeleted?: (cardType: string, itemLabel: string) => void;
+  restoredDetailCards?: SavedDetailCard[];
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -303,10 +314,34 @@ function DetailNode({ data, id }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    if (restoredRef.current || !restoredDetailCards?.length) return;
+    restoredRef.current = true;
+
+    const newNodes = restoredDetailCards.map((card, i) => ({
+      id: `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
+      type: 'detail' as const,
+      position: { x: card.posX, y: card.posY },
+      data: {
+        cardType: card.cardType, itemLabel: card.itemLabel,
+        conceptId: card.conceptId, conceptColor: card.conceptColor,
+      },
+    }));
+    const newEdges = restoredDetailCards.map((card, i) => ({
+      id: `edge-restored-${i}`,
+      source: card.conceptId,
+      target: newNodes[i].id,
+    }));
+
+    setNodes(prev => [...prev, ...newNodes]);
+    setEdges(prev => [...prev, ...newEdges]);
+  }, [restoredDetailCards]);
 
   const rfInstance = useRef<ReactFlowInstance<Node, Edge> | null>(null);
 
@@ -362,7 +397,10 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       markerEnd: { type: MarkerType.ArrowClosed, color: conceptColor },
     }]);
 
-    onDetailAdded?.(cardType, itemLabel);   
+    onDetailAdded?.({
+      cardType, itemLabel, conceptId, conceptColor,
+      posX: position.x, posY: position.y,
+    }); 
 
   }, [setNodes, setEdges]);
 
