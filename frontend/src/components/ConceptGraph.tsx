@@ -330,7 +330,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    e.dataTransfer.dropEffect = 'move';
   }, []);
 
   const onDrop = useCallback((e: React.DragEvent) => {

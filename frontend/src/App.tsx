@@ -348,7 +348,7 @@ export default function App() {
                         conceptId:    selectedConcept.id,
                         conceptColor: selectedConcept.color,
                       }));
-                      e.dataTransfer.effectAllowed = 'copy';
+                      e.dataTransfer.effectAllowed = 'move';
                     }}
                     style={{
                       flex: 1,
