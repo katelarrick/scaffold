@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ConceptGraph from './components/ConceptGraph';
 import { fetchAssessments, fetchQuestions, fetchQuestionConcepts } from './api/client';
 import type { Assessment, Question } from './api/client';
@@ -53,6 +53,14 @@ export default function App() {
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [closeHovered, setCloseHovered] = useState(false);
   const [savedDetailCards, setSavedDetailCards] = useState<SavedDetailCard[]>([]);
+  const [initialDetailCards, setInitialDetailCards] = useState<SavedDetailCard[]>([]);
+
+  // in App.tsx, near the top of the component
+  const starredIdsRef = useRef<Set<string>>(starredIds);
+  useEffect(() => { starredIdsRef.current = starredIds; }, [starredIds]);
+
+  const savedDetailCardsRef = useRef<SavedDetailCard[]>(savedDetailCards);
+  useEffect(() => { savedDetailCardsRef.current = savedDetailCards; }, [savedDetailCards]);
 
   const persistState = async (
     pin: string,
@@ -117,6 +125,7 @@ export default function App() {
       const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
       setSavedDetailCards(cards);
       setAddedDetailKeys(new Set(cards.map(c => `${c.cardType}:${c.itemLabel}`)));
+      setInitialDetailCards(cards);  // ← set once, never touched again
     }
   };
 
@@ -124,7 +133,7 @@ export default function App() {
     setStarredIds(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-      persistState(studentPin!, next, savedDetailCards);
+      persistState(studentPin!, next, savedDetailCardsRef.current);
       return next;
     });
   };
@@ -137,6 +146,9 @@ export default function App() {
     setSelectedItem(null);
     setSelectedQuestionId('');
     setSavedDetailCards([]);
+    setAddedDetailKeys(new Set());
+    setSavedDetailCards([]);
+    setStarredIds(new Set());
     persistState(studentPin!, new Set(), []);
   };
 
@@ -147,7 +159,7 @@ export default function App() {
     setAddedDetailKeys(prev => new Set([...prev, key]));
     setSavedDetailCards(prev => {
       const next = [...prev, card];
-      persistState(studentPin!, starredIds, next);
+      persistState(studentPin!, starredIdsRef.current, next);
       return next;
     });
   };
@@ -157,7 +169,7 @@ export default function App() {
     setAddedDetailKeys(prev => { const s = new Set(prev); s.delete(key); return s; });
     setSavedDetailCards(prev => {
       const next = prev.filter(c => !(c.cardType === cardType && c.itemLabel === itemLabel));
-      persistState(studentPin!, starredIds, next);
+      persistState(studentPin!, starredIdsRef.current, next);
       return next;
     });
   };
@@ -255,7 +267,7 @@ export default function App() {
           starredIds={starredIds}
           onStarClick={handleStarClick}
           onReset={handleReset}
-          restoredDetailCards={savedDetailCards}
+          restoredDetailCards={initialDetailCards}
           onDetailAdded={handleDetailAdded}
           onDetailDeleted={handleDetailDeleted}
         />

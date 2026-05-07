@@ -38,7 +38,20 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
         boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
         padding: '40px 48px', width: 360, textAlign: 'center',
       }}>
-        <div style={{ fontSize: 28, fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 800, color: '#1E293B', marginBottom: 8 }}>
+        <div style={{
+          display: 'inline-block',
+          fontFamily: 'Helvetica, Arial, sans-serif',
+          fontWeight: 800,
+          fontSize: 30,
+          color: '#1E293B',
+          background: '#d9f9ff',
+          padding: '10px 14px',
+          borderRadius: 8,
+          borderTop:    '1.5px solid #1E293B',
+          borderLeft:   '1.5px solid #1E293B',
+          borderRight:  '4px solid #1E293B',
+          borderBottom: '4px solid #1E293B',
+        }}>
           Scaffold
         </div>
         <div style={{ fontSize: 14, color: '#64748B', marginBottom: 20, marginTop: 20 }}>

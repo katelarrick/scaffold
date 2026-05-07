@@ -246,7 +246,7 @@ function DetailNode({ data, id }: NodeProps) {
       position: 'relative',
       textAlign: 'left',
     }}>
-      <Handle type="target" position={Position.Top}
+      <Handle id="bottom" type="target" position={Position.Bottom} isConnectable={false} 
         style={{ opacity: 0, pointerEvents: 'none' }} />
 
       {/* X button */}
@@ -337,6 +337,10 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       id: `edge-restored-${i}`,
       source: card.conceptId,
       target: newNodes[i].id,
+      targetHandle: 'bottom',
+      type:         'smooth',
+      style:        { stroke: card.conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
+      markerEnd:    { type: MarkerType.ArrowClosed, color: card.conceptColor },
     }));
 
     setNodes(prev => [...prev, ...newNodes]);
@@ -392,6 +396,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       id:     `detail-edge-${nodeId}`,
       source:  conceptId,
       target:  nodeId,
+      targetHandle: 'bottom',
       type:   'smooth',
       style:  { stroke: conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
       markerEnd: { type: MarkerType.ArrowClosed, color: conceptColor },
@@ -421,25 +426,34 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {
-    if (!hasSelection) { setEdges(initialEdges); return; }
-    setEdges(prereqEdgeData.map(e => {
-      const isHighlighted = highlightedIds.has(e.source) && highlightedIds.has(e.target);
-      const color = majorConcepts.find(c => c.id === e.source)?.color ?? '#64748B';
-      return {
-        id: `prereq-${e.source}-${e.target}`,
-        source: e.source, target: e.target,
-        sourceHandle: 'top', targetHandle: 'bottom',
-        type: 'dashed',
-        animated: isHighlighted,
-        style: {
-          stroke: isHighlighted ? color : '#CBD5E1',
-          strokeWidth: isHighlighted ? 5 : 4,
-          strokeDasharray: isHighlighted ? undefined : '5 3',
-          opacity: isHighlighted ? 1 : 0.2,
-        },
-        markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#CBD5E1' },
-      };
-    }));
+    if (!hasSelection) {
+      setEdges(eds => [
+        ...initialEdges,
+        ...eds.filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-')),
+      ]);
+      return;
+    }
+    setEdges(eds => [
+      ...prereqEdgeData.map(e => {
+        const isHighlighted = highlightedIds.has(e.source) && highlightedIds.has(e.target);
+        const color = majorConcepts.find(c => c.id === e.source)?.color ?? '#64748B';
+        return {
+          id: `prereq-${e.source}-${e.target}`,
+          source: e.source, target: e.target,
+          sourceHandle: 'top', targetHandle: 'bottom',
+          type: 'dashed',
+          animated: isHighlighted,
+          style: {
+            stroke: isHighlighted ? color : '#CBD5E1',
+            strokeWidth: isHighlighted ? 5 : 4,
+            strokeDasharray: isHighlighted ? undefined : '5 3',
+            opacity: isHighlighted ? 1 : 0.2,
+          },
+          markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#CBD5E1' },
+        };
+      }),
+      ...eds.filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-')),
+    ]);
   }, [highlightedIds, hasSelection, setEdges]);
 
   const onNodeClick = useCallback((_e: React.MouseEvent, node: Node) => {
