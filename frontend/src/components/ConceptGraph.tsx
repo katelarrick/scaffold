@@ -243,11 +243,16 @@ function DetailNode({ data, id }: NodeProps) {
   const cardType    = data.cardType    as string;
   const itemLabel   = data.itemLabel   as string;
   const conceptColor = data.conceptColor as string;
+  const greyed = data.greyed as boolean | undefined;
+  const bgColor      = greyed ? '#f1f5f9'  : toPastel(conceptColor);
+  const borderColor  = greyed ? '#cbd5e1'  : '#000000';
+  const pillBg       = greyed ? '#cbd5e1'  : conceptColor;
+  const textColor    = greyed ? '#94a3b8'  : '#1E293B';
 
   return (
     <div style={{
-      background: toPastel(conceptColor),
-      border: '1px solid #000000',
+      background: bgColor,
+      border: `1px solid ${borderColor}`,
       borderRadius: 8,
       width: 250,
       padding: '10px 10px',
@@ -283,12 +288,14 @@ function DetailNode({ data, id }: NodeProps) {
 
       {/* Pill label */}
       <span style={{
-        background: conceptColor,
+        background: pillBg,
         borderRadius: 100,
         padding: '2px 10px',
-        border: '1px solid #000000',
+        border: `1px solid ${borderColor}`,
         fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 15, fontWeight: 700, color: '#000000',
+        fontSize: 15, 
+        fontWeight: 700, 
+        color: textColor,
         whiteSpace: 'nowrap',
         display: 'inline-block',
         marginBottom: 6,
@@ -301,7 +308,10 @@ function DetailNode({ data, id }: NodeProps) {
       <div style={{
         paddingLeft: 6,
         fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13, fontWeight: 700, color: '#1E293B', marginBottom: 6,
+        fontSize: 13, 
+        fontWeight: 700, 
+        color: textColor, 
+        marginBottom: 6,
       }}>
         {itemLabel}
       </div>
@@ -311,7 +321,9 @@ function DetailNode({ data, id }: NodeProps) {
         paddingLeft: 6,
         paddingRight: 6,
         fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13, color: '#1E293B', lineHeight: 1.5,
+        fontSize: 13, 
+        color: textColor,
+        lineHeight: 1.5,
       }}>
         {cardType === 'Example' ? (
           <pre style={{
@@ -323,7 +335,7 @@ function DetailNode({ data, id }: NodeProps) {
             padding: '8px 12px',
             margin: 0,
             whiteSpace: 'pre-wrap',
-            color: '#1E293B',
+            color: textColor,
             lineHeight: 1.5,
           }}>
             {(data.cardContent as string) || `Example for "${itemLabel}" will appear here.`}
@@ -384,6 +396,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       type:         'smooth',
       style:        { stroke: card.conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
       markerEnd:    { type: MarkerType.ArrowClosed, color: card.conceptColor },
+      data: { conceptColor: card.conceptColor },
     }));
 
     setNodes(prev => [...prev, ...newNodes]);
@@ -443,6 +456,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       type:   'smooth',
       style:  { stroke: conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
       markerEnd: { type: MarkerType.ArrowClosed, color: conceptColor },
+      data:         { conceptColor },
     }]);
 
     onDetailAdded?.({
@@ -454,17 +468,28 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
-    setNodes(nds => nds.map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        highlighted:            highlightedIds.has(node.id),
-        hasSelection,
-        highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
-        starred:                starredIds.has(node.id),
-        onStarClick:            () => onStarClick(node.id),
-      },
-    })));
+    setNodes(nds => nds.map(node => {
+      if (node.type === 'detail') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            greyed: hasSelection && !highlightedIds.has(node.data.conceptId as string),
+          },
+        };
+      }
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          highlighted:            highlightedIds.has(node.id),
+          hasSelection,
+          highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
+          starred:                starredIds.has(node.id),
+          onStarClick:            () => onStarClick(node.id),
+        },
+      };
+    }));
   }, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, onStarClick, setNodes]);
 
   // Update edge appearance when highlighted set changes
@@ -472,7 +497,16 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     if (!hasSelection) {
       setEdges(eds => [
         ...initialEdges,
-        ...eds.filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-')),
+        ...eds
+          .filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-'))
+          .map(e => {
+            const color = e.data?.conceptColor as string ?? '#64748B';
+            return {
+              ...e,
+              style:     { stroke: color, strokeWidth: 4, strokeDasharray: '4 2' },
+              markerEnd: { type: MarkerType.ArrowClosed, color },
+            };
+          }),
       ]);
       return;
     }
@@ -487,15 +521,25 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
           type: 'dashed',
           animated: isHighlighted,
           style: {
-            stroke: isHighlighted ? color : '#CBD5E1',
-            strokeWidth: isHighlighted ? 5 : 4,
+            stroke:          isHighlighted ? color : '#CBD5E1',
+            strokeWidth:     isHighlighted ? 5 : 4,
             strokeDasharray: isHighlighted ? undefined : '5 3',
-            opacity: isHighlighted ? 1 : 0.2,
+            opacity:         isHighlighted ? 1 : 0.2,
           },
           markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#CBD5E1' },
         };
       }),
-      ...eds.filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-')),
+      ...eds
+        .filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-'))
+        .map(e => {
+          const isHighlighted = highlightedIds.has(e.source);
+          const color = e.data?.conceptColor as string ?? '#64748B';
+          return {
+            ...e,
+            style:     { stroke: isHighlighted ? color : '#cbd5e1', strokeWidth: 4, strokeDasharray: '4 2' },
+            markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#cbd5e1' },
+          };
+        }),
     ]);
   }, [highlightedIds, hasSelection, setEdges]);
 
