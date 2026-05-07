@@ -6,6 +6,7 @@ import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
 import ConsentScreen from './components/ConsentScreen';
 import QuestionSearch from './components/QuestionSearch';
 import AssessmentSelect from './components/AssessmentSelect';
+import { conceptContent, type ConceptContent} from './data/conceptContent';
 import { supabase } from './lib/supabase';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
@@ -419,6 +420,11 @@ export default function App() {
           const selectedItemLabel = selectedItem === selectedConcept.id
             ? selectedConcept.label.replace(/\n/g, ' ')
             : selectedItem ?? '';
+          
+          const contentKey = selectedItem === selectedConcept.id
+            ? selectedConcept.id
+            : `${selectedConcept.id}:${selectedItem}`;
+          const content = conceptContent[contentKey];
 
           return (
             <div style={{ padding: '0 20px 20px', display: 'flex', gap: 12 }}>
@@ -438,6 +444,7 @@ export default function App() {
                         itemLabel:    selectedItemLabel,
                         conceptId:    selectedConcept.id,
                         conceptColor: selectedConcept.color,
+                        cardContent:  content?.[card.key as keyof ConceptContent] ?? '',
                       }));
                       e.dataTransfer.effectAllowed = 'move';
                     }}
@@ -470,9 +477,27 @@ export default function App() {
                       fontFamily: 'Helvetica, Arial, sans-serif',
                       fontSize: 13, color: '#1E293B',
                       lineHeight: 1.6,
-                      paddingLeft: 8,
+                      //paddingLeft: 4,
                     }}>
-                      {`${card.label} for "${selectedItemLabel}" will appear here.`}
+                      {card.key === 'example' ? (
+                        <pre style={{
+                          fontFamily: 'monospace',
+                          border: '1px solid #000000',
+                          fontSize: 13,
+                          background: '#e2e8f0',
+                          borderRadius: 6,
+                          padding: '8px 12px',
+                          margin: 0,
+                          whiteSpace: 'pre-wrap',
+                          color: '#1E293B',
+                        }}>
+                          {content?.[card.key as keyof ConceptContent]
+                            ?? `Example for "${selectedItemLabel}" will appear here.`}
+                        </pre>
+                      ) : (
+                        content?.[card.key as keyof ConceptContent]
+                          ?? `${card.label} for "${selectedItemLabel}" will appear here.`
+                      )}
                     </div>
                   </div>
                 );

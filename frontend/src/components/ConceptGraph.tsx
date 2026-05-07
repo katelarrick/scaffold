@@ -7,6 +7,13 @@ import {
 import '@xyflow/react/dist/style.css';
 import { buildGraphElements } from '../utils/layout';
 import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
+import { conceptContent, type ConceptContent } from '../data/conceptContent';
+
+const cardKeyMap: Record<string, keyof ConceptContent> = {
+  'Description':           'description',
+  'Example':               'example',
+  'PrairieLearn Practice': 'practice',
+};
 
 interface SavedDetailCard {
   cardType: string; itemLabel: string;
@@ -292,18 +299,43 @@ function DetailNode({ data, id }: NodeProps) {
 
       {/* Item label */}
       <div style={{
+        paddingLeft: 6,
         fontFamily: 'Helvetica, Arial, sans-serif',
         fontSize: 13, fontWeight: 700, color: '#1E293B', marginBottom: 6,
       }}>
         {itemLabel}
       </div>
 
-      {/* Placeholder content */}
+      {/* Content */}
       <div style={{
+        paddingLeft: 6,
+        paddingRight: 6,
         fontFamily: 'Helvetica, Arial, sans-serif',
         fontSize: 13, color: '#1E293B', lineHeight: 1.5,
       }}>
-        {`${cardType} for "${itemLabel}" will appear here.`}
+        {cardType === 'Example' ? (
+          <pre style={{
+            fontFamily: 'monospace',
+            fontSize: 12,
+            background: '#e2e8f0',
+            border: '1px solid #000000',
+            borderRadius: 6,
+            padding: '8px 12px',
+            margin: 0,
+            whiteSpace: 'pre-wrap',
+            color: '#1E293B',
+            lineHeight: 1.5,
+          }}>
+            {(data.cardContent as string) || `Example for "${itemLabel}" will appear here.`}
+          </pre>
+        ) : (
+          <div style={{
+            fontFamily: 'Helvetica, Arial, sans-serif',
+            fontSize: 12, color: '#1E293B', lineHeight: 1.5,
+          }}>
+            {(data.cardContent as string) || `${cardType} for "${itemLabel}" will appear here.`}
+          </div>
+        )}
       </div>
 
       <Handle type="source" position={Position.Bottom}
@@ -327,15 +359,23 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     if (restoredRef.current || !restoredDetailCards?.length) return;
     restoredRef.current = true;
 
-    const newNodes = restoredDetailCards.map((card, i) => ({
-      id: `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
-      type: 'detail' as const,
-      position: { x: card.posX, y: card.posY },
-      data: {
-        cardType: card.cardType, itemLabel: card.itemLabel,
-        conceptId: card.conceptId, conceptColor: card.conceptColor,
-      },
-    }));
+    const newNodes = restoredDetailCards.map((card, i) => {
+      const concept = majorConcepts.find(c => c.id === card.conceptId);
+      const conceptLabel = concept?.label.replace(/\n/g, ' ') ?? '';
+      const isConceptItself = card.itemLabel === conceptLabel;
+      const contentKey = isConceptItself
+        ? card.conceptId
+        : `${card.conceptId}:${card.itemLabel}`;
+      const cardContent = conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? '';
+
+      return {
+        id:       `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
+        type:     'detail' as const,
+        position: { x: card.posX, y: card.posY },
+        data:     { cardType: card.cardType, itemLabel: card.itemLabel,
+                    conceptColor: card.conceptColor, cardContent },
+      };
+    });
     const newEdges = restoredDetailCards.map((card, i) => ({
       id: `edge-restored-${i}`,
       source: card.conceptId,
@@ -380,7 +420,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     const raw = e.dataTransfer.getData('application/scaffold-card');
     if (!raw) return;
 
-    const { cardType, itemLabel, conceptId, conceptColor } = JSON.parse(raw);
+    const { cardType, itemLabel, conceptId, conceptColor, cardContent } = JSON.parse(raw);
     const position = rfInstance.current?.screenToFlowPosition({
       x: e.clientX, y: e.clientY,
     });
@@ -392,7 +432,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
       id:       nodeId,
       type:     'detail',
       position,
-      data:     { cardType, itemLabel, conceptColor },
+      data: { cardType, itemLabel, conceptColor, cardContent },
     }]);
 
     setEdges(eds => [...eds, {
