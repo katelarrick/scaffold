@@ -6,6 +6,7 @@ import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
 import ConsentScreen from './components/ConsentScreen';
 import QuestionSearch from './components/QuestionSearch';
 import AssessmentSelect from './components/AssessmentSelect';
+import { supabase } from './lib/supabase';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
@@ -33,6 +34,12 @@ function computeSubgraph(taggedIds: string[]): Set<string> {
 }
 
 export default function App() {
+  interface SavedDetailCard {
+    cardType: string; itemLabel: string;
+    conceptId: string; conceptColor: string;
+    posX: number; posY: number;
+  }
+  
   const [assessments, setAssessments]               = useState<Assessment[]>([]);
   const [questions, setQuestions]                   = useState<Question[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
@@ -45,7 +52,19 @@ export default function App() {
   const [_isTracked, setIsTracked]     = useState(false);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
   const [closeHovered, setCloseHovered] = useState(false);
+  const [savedDetailCards, setSavedDetailCards] = useState<SavedDetailCard[]>([]);
 
+  const persistState = async (
+    pin: string,
+    stars: Set<string>,
+    cards: SavedDetailCard[]
+  ) => {
+    await supabase.from('user_state').upsert({
+      pin,
+      starred_ids: Array.from(stars),
+      detail_cards: cards,
+    });
+  };
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
 
@@ -83,15 +102,29 @@ export default function App() {
     ? majorConcepts.find(c => c.id === selectedConceptId)
     : null;
 
-  const handleConsentComplete = (pin: string, consented: boolean) => {
+  const handleConsentComplete = async (pin: string, consented: boolean) => {
     setStudentPin(pin);
     setIsTracked(consented);
+
+    const { data } = await supabase
+      .from('user_state')
+      .select('starred_ids, detail_cards')
+      .eq('pin', pin)
+      .maybeSingle();
+
+    if (data) {
+      setStarredIds(new Set(data.starred_ids as string[]));
+      const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
+      setSavedDetailCards(cards);
+      setAddedDetailKeys(new Set(cards.map(c => `${c.cardType}:${c.itemLabel}`)));
+    }
   };
 
   const handleStarClick = (id: string) => {
     setStarredIds(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
+      persistState(studentPin!, next, savedDetailCards);
       return next;
     });
   };
@@ -103,6 +136,30 @@ export default function App() {
     setSelectedConceptId(null);
     setSelectedItem(null);
     setSelectedQuestionId('');
+    setSavedDetailCards([]);
+    persistState(studentPin!, new Set(), []);
+  };
+
+  const [addedDetailKeys, setAddedDetailKeys] = useState<Set<string>>(new Set());
+
+  const handleDetailAdded = (card: SavedDetailCard) => {
+    const key = `${card.cardType}:${card.itemLabel}`;
+    setAddedDetailKeys(prev => new Set([...prev, key]));
+    setSavedDetailCards(prev => {
+      const next = [...prev, card];
+      persistState(studentPin!, starredIds, next);
+      return next;
+    });
+  };
+
+  const handleDetailDeleted = (cardType: string, itemLabel: string) => {
+    const key = `${cardType}:${itemLabel}`;
+    setAddedDetailKeys(prev => { const s = new Set(prev); s.delete(key); return s; });
+    setSavedDetailCards(prev => {
+      const next = prev.filter(c => !(c.cardType === cardType && c.itemLabel === itemLabel));
+      persistState(studentPin!, starredIds, next);
+      return next;
+    });
   };
 
 
@@ -198,6 +255,9 @@ export default function App() {
           starredIds={starredIds}
           onStarClick={handleStarClick}
           onReset={handleReset}
+          restoredDetailCards={savedDetailCards}
+          onDetailAdded={handleDetailAdded}
+          onDetailDeleted={handleDetailDeleted}
         />
       </div>
 
@@ -319,39 +379,57 @@ export default function App() {
                 { label: 'Description',           key: 'description' },
                 { label: 'Example',               key: 'example'     },
                 { label: 'PrairieLearn Practice', key: 'practice'    },
-              ].map(card => (
-                <div key={card.key} style={{
-                  flex: 1,
-                  background: toPastel(selectedConcept.color),
-                  borderRadius: 8,
-                  border: '1px solid #000000',
-                  padding: '10px 14px',
-                  textAlign: 'left',
-                }}>
-                  <span style={{
-                    background: selectedConcept.color,
-                    borderRadius: 100,
-                    padding: '2px 10px',
-                    border: '1px solid #000000',
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: 12, fontWeight: 700, color: '#000000',
-                    whiteSpace: 'nowrap',
-                    width: 'fit-content',
-                    display: 'inline-block',
-                    marginBottom: 8,
-                  }}>
-                    {card.label}
-                  </span>
-                  <div style={{
-                    fontFamily: 'Helvetica, Arial, sans-serif',
-                    fontSize: 13, color: '#1E293B',
-                    lineHeight: 1.6,
-                    paddingLeft: 8,
-                  }}>
-                    {`${card.label} for "${selectedItemLabel}" will appear here.`}
+              ].map(card => {
+                const isAdded = addedDetailKeys.has(`${card.label}:${selectedItemLabel}`);
+                return (
+                  <div
+                    key={card.key}
+                    draggable={!isAdded}
+                    onDragStart={isAdded ? undefined : e => {
+                      e.dataTransfer.setData('application/scaffold-card', JSON.stringify({
+                        cardType:     card.label,
+                        itemLabel:    selectedItemLabel,
+                        conceptId:    selectedConcept.id,
+                        conceptColor: selectedConcept.color,
+                      }));
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    style={{
+                      flex: 1,
+                      background: toPastel(selectedConcept.color),
+                      borderRadius: 8,
+                      border: '1px solid #000000',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      cursor: isAdded ? 'default' : 'grab',
+                      opacity: isAdded ? 0.8 : 1,
+                    }}
+                  >
+                    <span style={{
+                      background: selectedConcept.color,
+                      borderRadius: 100,
+                      padding: '2px 10px',
+                      border: '1px solid #000000',
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      fontSize: 12, fontWeight: 700, color: '#000000',
+                      whiteSpace: 'nowrap',
+                      width: 'fit-content',
+                      display: 'inline-block',
+                      marginBottom: 8,
+                    }}>
+                      {card.label}
+                    </span>
+                    <div style={{
+                      fontFamily: 'Helvetica, Arial, sans-serif',
+                      fontSize: 13, color: '#1E293B',
+                      lineHeight: 1.6,
+                      paddingLeft: 8,
+                    }}>
+                      {`${card.label} for "${selectedItemLabel}" will appear here.`}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}

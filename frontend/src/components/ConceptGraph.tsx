@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef, createContext, useContext } from 'react';
 import {
   ReactFlow, type ReactFlowInstance, Controls, Background, BackgroundVariant,
   useNodesState, useEdgesState, Handle, Position, MarkerType,
@@ -8,6 +8,12 @@ import '@xyflow/react/dist/style.css';
 import { buildGraphElements } from '../utils/layout';
 import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
 
+interface SavedDetailCard {
+  cardType: string; itemLabel: string;
+  conceptId: string; conceptColor: string;
+  posX: number; posY: number;
+}
+
 interface ConceptGraphProps {
   highlightedIds: Set<string>;
   highlightedSubconcepts: Map<string, Set<string>>;
@@ -15,6 +21,13 @@ interface ConceptGraphProps {
   starredIds: Set<string>;
   onStarClick: (id: string) => void;
   onReset: () => void;
+  onDetailAdded?: (card: {
+    cardType: string; itemLabel: string;
+    conceptId: string; conceptColor: string;
+    posX: number; posY: number;
+  }) => void;
+  onDetailDeleted?: (cardType: string, itemLabel: string) => void;
+  restoredDetailCards?: SavedDetailCard[];
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -26,6 +39,8 @@ function toPastel(hex: string, strength: number = 0.35): string {
   const pb = Math.round(b * strength + 255 * (1 - strength));
   return `rgb(${pr}, ${pg}, ${pb})`;
 }
+
+const DeleteDetailContext = createContext<(id: string) => void>(() => {});
 
 const LEVELS = [
   { label: 'Level 1', color: '#c5d3f9' },
@@ -213,13 +228,120 @@ function MajorNode({ data }: NodeProps) {
   );
 }
 
-const nodeTypes: NodeTypes = { major: MajorNode };
+function DetailNode({ data, id }: NodeProps) {
+  const onDelete                 = useContext(DeleteDetailContext);
+  const [closeHovered, setCloseHovered] = useState(false);
+
+  const cardType    = data.cardType    as string;
+  const itemLabel   = data.itemLabel   as string;
+  const conceptColor = data.conceptColor as string;
+
+  return (
+    <div style={{
+      background: toPastel(conceptColor),
+      border: '1px solid #000000',
+      borderRadius: 8,
+      width: 250,
+      padding: '10px 10px',
+      position: 'relative',
+      textAlign: 'left',
+    }}>
+      <Handle type="target" position={Position.Top}
+        style={{ opacity: 0, pointerEvents: 'none' }} />
+
+      {/* X button */}
+      <div
+        onClick={e => { e.stopPropagation(); onDelete(id); }}
+        onMouseEnter={() => setCloseHovered(true)}
+        onMouseLeave={() => setCloseHovered(false)}
+        style={{
+          position: 'absolute', top: 8, right: 8,
+          width: 22, height: 22, borderRadius: 5,
+          borderTop: '1.5px solid #1E293B', borderLeft: '1.5px solid #1E293B',
+          borderRight: '3px solid #1E293B', borderBottom: '3px solid #1E293B',
+          background: closeHovered ? '#ef4444' : '#ffffff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', transition: 'background 0.15s', zIndex: 1,
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke={closeHovered ? '#ffffff' : '#1E293B'}
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </div>
+
+      {/* Pill label */}
+      <span style={{
+        background: conceptColor,
+        borderRadius: 100,
+        padding: '2px 10px',
+        border: '1px solid #000000',
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: 15, fontWeight: 700, color: '#000000',
+        whiteSpace: 'nowrap',
+        display: 'inline-block',
+        marginBottom: 6,
+        marginRight: 20,
+      }}>
+        {cardType}
+      </span>
+
+      {/* Item label */}
+      <div style={{
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: 13, fontWeight: 700, color: '#1E293B', marginBottom: 6,
+      }}>
+        {itemLabel}
+      </div>
+
+      {/* Placeholder content */}
+      <div style={{
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fontSize: 13, color: '#1E293B', lineHeight: 1.5,
+      }}>
+        {`${cardType} for "${itemLabel}" will appear here.`}
+      </div>
+
+      <Handle type="source" position={Position.Bottom}
+        style={{ opacity: 0, pointerEvents: 'none' }} />
+    </div>
+  );
+}
+
+const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset }: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    if (restoredRef.current || !restoredDetailCards?.length) return;
+    restoredRef.current = true;
+
+    const newNodes = restoredDetailCards.map((card, i) => ({
+      id: `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
+      type: 'detail' as const,
+      position: { x: card.posX, y: card.posY },
+      data: {
+        cardType: card.cardType, itemLabel: card.itemLabel,
+        conceptId: card.conceptId, conceptColor: card.conceptColor,
+      },
+    }));
+    const newEdges = restoredDetailCards.map((card, i) => ({
+      id: `edge-restored-${i}`,
+      source: card.conceptId,
+      target: newNodes[i].id,
+    }));
+
+    setNodes(prev => [...prev, ...newNodes]);
+    setEdges(prev => [...prev, ...newEdges]);
+  }, [restoredDetailCards]);
 
   const rfInstance = useRef<ReactFlowInstance<Node, Edge> | null>(null);
 
@@ -229,6 +351,58 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     onReset();
     setTimeout(() => rfInstance.current?.fitView({ padding: 0.08 }), 50);
   }, [onReset, setNodes, setEdges]);
+
+  const handleDeleteDetail = useCallback((id: string) => {
+    setNodes(nds => {
+      const node = nds.find(n => n.id === id);
+      if (node?.data) {
+        onDetailDeleted?.(node.data.cardType as string, node.data.itemLabel as string);
+      }
+      return nds.filter(n => n.id !== id);
+    });
+    setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
+  }, [setNodes, setEdges, onDetailDeleted]);
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData('application/scaffold-card');
+    if (!raw) return;
+
+    const { cardType, itemLabel, conceptId, conceptColor } = JSON.parse(raw);
+    const position = rfInstance.current?.screenToFlowPosition({
+      x: e.clientX, y: e.clientY,
+    });
+    if (!position) return;
+
+    const nodeId = `detail-${Date.now()}`;
+
+    setNodes(nds => [...nds, {
+      id:       nodeId,
+      type:     'detail',
+      position,
+      data:     { cardType, itemLabel, conceptColor },
+    }]);
+
+    setEdges(eds => [...eds, {
+      id:     `detail-edge-${nodeId}`,
+      source:  conceptId,
+      target:  nodeId,
+      type:   'smooth',
+      style:  { stroke: conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
+      markerEnd: { type: MarkerType.ArrowClosed, color: conceptColor },
+    }]);
+
+    onDetailAdded?.({
+      cardType, itemLabel, conceptId, conceptColor,
+      posX: position.x, posY: position.y,
+    }); 
+
+  }, [setNodes, setEdges]);
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
@@ -269,31 +443,36 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
   }, [highlightedIds, hasSelection, setEdges]);
 
   const onNodeClick = useCallback((_e: React.MouseEvent, node: Node) => {
+    if (node.type === 'detail') return;
     onConceptClick(node.id);
   }, [onConceptClick]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <div style={{
-        position: 'absolute', alignItems: 'flex-end',
-        top: 12, right: 12, zIndex: 10,
-        display: 'flex', flexDirection: 'column', gap: 8,
-      }}>
-        <ResetButton onReset={handleReset} />
-        <LevelLegend />
+    <DeleteDetailContext.Provider value={handleDeleteDetail}>
+      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div style={{
+          position: 'absolute', alignItems: 'flex-end',
+          top: 12, right: 12, zIndex: 10,
+          display: 'flex', flexDirection: 'column', gap: 8,
+        }}>
+          <ResetButton onReset={handleReset} />
+          <LevelLegend />
+        </div>
+        <ReactFlow
+          nodes={nodes} edges={edges}
+          onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+          nodeTypes={nodeTypes}
+          nodesConnectable={false}
+          onNodeClick={onNodeClick}
+          onInit={(instance: ReactFlowInstance<Node, Edge>) => { rfInstance.current = instance; }}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
+        >
+          <Controls />
+          <Background variant={BackgroundVariant.Dots} color='#1E293B' gap={20} />
+        </ReactFlow>
       </div>
-      <ReactFlow
-        nodes={nodes} edges={edges}
-        onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        nodesConnectable={false}
-        onNodeClick={onNodeClick}
-        onInit={(instance: ReactFlowInstance<Node, Edge>) => { rfInstance.current = instance; }}
-        fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
-      >
-        <Controls />
-        <Background variant={BackgroundVariant.Dots} color='#1E293B' gap={20} />
-      </ReactFlow>
-    </div>
+    </DeleteDetailContext.Provider>
   );
 }
