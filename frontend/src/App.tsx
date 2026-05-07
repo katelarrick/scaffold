@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ConceptGraph from './components/ConceptGraph';
 import { fetchAssessments, fetchQuestions, fetchQuestionConcepts } from './api/client';
 import type { Assessment, Question } from './api/client';
@@ -39,40 +39,45 @@ export default function App() {
     conceptId: string; conceptColor: string;
     posX: number; posY: number;
   }
-  
-  const [assessments, setAssessments]               = useState<Assessment[]>([]);
-  const [questions, setQuestions]                   = useState<Question[]>([]);
-  const [selectedAssessmentId, setSelectedAssessmentId] = useState('');
-  const [selectedQuestionId, setSelectedQuestionId]     = useState('');
-  const [highlightedIds, setHighlightedIds]         = useState<Set<string>>(new Set());
-  const [selectedConceptId, setSelectedConceptId]   = useState<string | null>(null);
-  const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [studentPin, setStudentPin]   = useState<string | null>(null);
-  const [_isTracked, setIsTracked]     = useState(false);
-  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
-  const [closeHovered, setCloseHovered] = useState(false);
-  const [savedDetailCards, setSavedDetailCards] = useState<SavedDetailCard[]>([]);
-  const [initialDetailCards, setInitialDetailCards] = useState<SavedDetailCard[]>([]);
 
-  // in App.tsx, near the top of the component
+  const [assessments, setAssessments]                       = useState<Assessment[]>([]);
+  const [questions, setQuestions]                           = useState<Question[]>([]);
+  const [selectedAssessmentId, setSelectedAssessmentId]     = useState('');
+  const [selectedQuestionId, setSelectedQuestionId]         = useState('');
+  const [highlightedIds, setHighlightedIds]                 = useState<Set<string>>(new Set());
+  const [selectedConceptId, setSelectedConceptId]           = useState<string | null>(null);
+  const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
+  const [selectedItem, setSelectedItem]                     = useState<string | null>(null);
+  const [studentPin, setStudentPin]                         = useState<string | null>(null);
+  const [_isTracked, setIsTracked]                          = useState(false);
+  const [starredIds, setStarredIds]                         = useState<Set<string>>(new Set());
+  const [closeHovered, setCloseHovered]                     = useState(false);
+  const [savedDetailCards, setSavedDetailCards]             = useState<SavedDetailCard[]>([]);
+  const [initialDetailCards, setInitialDetailCards]         = useState<SavedDetailCard[]>([]);
+  const [addedDetailKeys, setAddedDetailKeys]               = useState<Set<string>>(new Set());
+
   const starredIdsRef = useRef<Set<string>>(starredIds);
   useEffect(() => { starredIdsRef.current = starredIds; }, [starredIds]);
 
   const savedDetailCardsRef = useRef<SavedDetailCard[]>(savedDetailCards);
   useEffect(() => { savedDetailCardsRef.current = savedDetailCards; }, [savedDetailCards]);
 
-  const persistState = async (
-    pin: string,
-    stars: Set<string>,
-    cards: SavedDetailCard[]
-  ) => {
+  const persistState = async (pin: string, stars: Set<string>, cards: SavedDetailCard[]) => {
     await supabase.from('user_state').upsert({
       pin,
       starred_ids: Array.from(stars),
       detail_cards: cards,
     });
   };
+
+  const logActivity = useCallback(async (eventType: string, payload: object) => {
+    if (!studentPin) return;
+    await supabase.from('user_activity').insert({
+      pin: studentPin,
+      event_type: eventType,
+      payload,
+    });
+  }, [studentPin]);
 
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
 
@@ -86,10 +91,13 @@ export default function App() {
   }, [selectedAssessmentId]);
 
   useEffect(() => {
-    if (!selectedQuestionId) { setHighlightedIds(new Set());  setHighlightedSubconcepts(new Map()); return; }
+    if (!selectedQuestionId) {
+      setHighlightedIds(new Set());
+      setHighlightedSubconcepts(new Map());
+      return;
+    }
     fetchQuestionConcepts(selectedQuestionId).then(concepts => {
       setHighlightedIds(computeSubgraph(concepts.map(c => c.concept_id)));
-
       const subMap = new Map<string, Set<string>>();
       concepts.forEach(c => {
         if (c.subconcept_label) {
@@ -100,11 +108,20 @@ export default function App() {
       setHighlightedSubconcepts(subMap);
     });
     setSelectedConceptId(null);
+    logActivity('question_viewed', { questionId: selectedQuestionId }); // ← #1
   }, [selectedQuestionId]);
 
-    useEffect(() => {
-      setSelectedItem(null);
-    }, [selectedConceptId]);
+  useEffect(() => {
+    setSelectedItem(null);
+  }, [selectedConceptId]);
+
+  useEffect(() => { // ← #3
+    if (!selectedItem || !selectedConceptId) return;
+    logActivity('detail_visited', {
+      conceptId: selectedConceptId,
+      itemLabel: selectedItem,
+    });
+  }, [selectedItem]);
 
   const selectedConcept = selectedConceptId
     ? majorConcepts.find(c => c.id === selectedConceptId)
@@ -125,8 +142,13 @@ export default function App() {
       const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
       setSavedDetailCards(cards);
       setAddedDetailKeys(new Set(cards.map(c => `${c.cardType}:${c.itemLabel}`)));
-      setInitialDetailCards(cards);  // ← set once, never touched again
+      setInitialDetailCards(cards);
     }
+  };
+
+  const handleConceptClick = (id: string) => { // ← #2
+    setSelectedConceptId(id);
+    logActivity('concept_clicked', { conceptId: id });
   };
 
   const handleStarClick = (id: string) => {
@@ -147,12 +169,8 @@ export default function App() {
     setSelectedQuestionId('');
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
-    setSavedDetailCards([]);
-    setStarredIds(new Set());
     persistState(studentPin!, new Set(), []);
   };
-
-  const [addedDetailKeys, setAddedDetailKeys] = useState<Set<string>>(new Set());
 
   const handleDetailAdded = (card: SavedDetailCard) => {
     const key = `${card.cardType}:${card.itemLabel}`;
@@ -161,6 +179,11 @@ export default function App() {
       const next = [...prev, card];
       persistState(studentPin!, starredIdsRef.current, next);
       return next;
+    });
+    logActivity('detail_added_to_graph', { // ← #4
+      cardType:  card.cardType,
+      itemLabel: card.itemLabel,
+      conceptId: card.conceptId,
     });
   };
 
@@ -173,7 +196,6 @@ export default function App() {
       return next;
     });
   };
-
 
   if (!studentPin) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
@@ -263,7 +285,7 @@ export default function App() {
         <ConceptGraph
           highlightedIds={highlightedIds}
           highlightedSubconcepts={highlightedSubconcepts}
-          onConceptClick={setSelectedConceptId}
+          onConceptClick={handleConceptClick}
           starredIds={starredIds}
           onStarClick={handleStarClick}
           onReset={handleReset}
