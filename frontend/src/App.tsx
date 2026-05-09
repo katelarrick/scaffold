@@ -57,7 +57,9 @@ export default function App() {
   const [initialDetailCards, setInitialDetailCards]         = useState<SavedDetailCard[]>([]);
   const [addedDetailKeys, setAddedDetailKeys]               = useState<Set<string>>(new Set());
   const [masteredSubconcepts, setMasteredSubconcepts] = useState<Set<string>>(new Set());
-
+  
+  const masteredSubconceptsRef = useRef<Set<string>>(masteredSubconcepts);
+  useEffect(() => { masteredSubconceptsRef.current = masteredSubconcepts; }, [masteredSubconcepts]);
 
   const starredIdsRef = useRef<Set<string>>(starredIds);
   useEffect(() => { starredIdsRef.current = starredIds; }, [starredIds]);
@@ -65,11 +67,12 @@ export default function App() {
   const savedDetailCardsRef = useRef<SavedDetailCard[]>(savedDetailCards);
   useEffect(() => { savedDetailCardsRef.current = savedDetailCards; }, [savedDetailCards]);
 
-  const persistState = async (pin: string, stars: Set<string>, cards: SavedDetailCard[]) => {
+  const persistState = async (pin: string, stars: Set<string>, cards: SavedDetailCard[], mastered: Set<string> = masteredSubconceptsRef.current,) => {
     await supabase.from('user_state').upsert({
       pin,
       starred_ids: Array.from(stars),
       detail_cards: cards,
+      mastered_subconcepts: Array.from(mastered),  
     });
   };
 
@@ -77,7 +80,7 @@ export default function App() {
     setMasteredSubconcepts(prev => {
       const next = new Set(prev);
       next.has(sub) ? next.delete(sub) : next.add(sub);
-      // persist to Supabase here
+      persistState(studentPin!, starredIdsRef.current, savedDetailCardsRef.current, next);
       return next;
     });
   };
@@ -155,6 +158,7 @@ export default function App() {
       setSavedDetailCards(cards);
       setAddedDetailKeys(new Set(cards.map(c => `${c.cardType}:${c.itemLabel}`)));
       setInitialDetailCards(cards);
+      setMasteredSubconcepts(new Set(data.mastered_subconcepts as string[] ?? []));
     }
   };
 
@@ -181,7 +185,8 @@ export default function App() {
     setSelectedQuestionId('');
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
-    persistState(studentPin!, new Set(), []);
+    setMasteredSubconcepts(new Set());
+    persistState(studentPin!, new Set(), [], new Set());
   };
 
   const handleDetailAdded = (card: SavedDetailCard) => {
@@ -239,7 +244,7 @@ export default function App() {
           fontWeight: 800,
           fontSize: 20,
           color: '#1E293B',
-          background: '#fe9a71',
+          background: '#d9f9ff',
           padding: '4px 12px',
           borderRadius: 8,
           borderTop:    '1.5px solid #1E293B',
@@ -323,7 +328,7 @@ export default function App() {
       </div>
 
       {/* ── Bottom toolbar ── */}
-      <div style={{ flexShrink: 0, background: '#f4e87b' }}>
+      <div style={{ position: 'relative', zIndex: 20, flexShrink: 0, background: '#f4e87b' }}>
 
         {/* Main toolbar row */}
         <div style={{
@@ -438,13 +443,13 @@ export default function App() {
             ? selectedConcept.id
             : `${selectedConcept.id}:${selectedItem}`;
           const content = conceptContent[contentKey];
+          const isMajorConcept = selectedItem === selectedConcept.id;
 
           return (
             <div style={{ padding: '0 20px 20px', display: 'flex', gap: 12 }}>
               {[
                 { label: 'Description',           key: 'description' },
                 { label: 'Example',               key: 'example'     },
-                { label: 'PrairieLearn Practice', key: 'practice'    },
               ].map(card => {
                 const isAdded = addedDetailKeys.has(`${card.label}:${selectedItemLabel}`);
                 return (
@@ -481,14 +486,14 @@ export default function App() {
                       fontSize: 12, fontWeight: 700, color: '#000000',
                       whiteSpace: 'nowrap',
                       width: 'fit-content',
-                      display: 'inline-block',
+                      display: 'block',
                       marginBottom: 8,
                     }}>
                       {card.label}
                     </span>
                     <div style={{
                       fontFamily: 'Helvetica, Arial, sans-serif',
-                      fontSize: 13, color: '#1E293B',
+                      fontSize: 15, color: '#1E293B',
                       lineHeight: 1.6,
                       //paddingLeft: 4,
                     }}>
@@ -496,7 +501,7 @@ export default function App() {
                         <pre style={{
                           fontFamily: 'monospace',
                           border: '1px solid #000000',
-                          fontSize: 11,
+                          fontSize: 13,
                           background: '#e2e8f0',
                           borderRadius: 6,
                           padding: '8px 12px',
@@ -515,6 +520,37 @@ export default function App() {
                   </div>
                 );
               })}
+
+              {isMajorConcept && (
+              <a
+                href={content?.practiceUrl ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: '0 0 auto',
+                  alignSelf: 'center',
+                  background: selectedConcept.color,
+                  borderRadius: 8,
+                  borderTop:    '1.5px solid #1E293B',
+                  borderLeft:   '1.5px solid #1E293B',
+                  borderRight:  '4px solid #1E293B',
+                  borderBottom: '4px solid #1E293B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  fontFamily: 'Helvetica, Arial, sans-serif',
+                  fontSize: 15, fontWeight: 700, color: '#1E293B',
+                  cursor: content?.practiceUrl ? 'pointer' : 'default',
+                  textDecoration: 'none',
+                  padding: '10px 14px',
+                  opacity: content?.practiceUrl ? 1 : 0.4,
+                }}
+              >
+                Practice with a <br />PrairieLearn <br /> question
+              </a>
+            )}
+
             </div>
           );
         })()}

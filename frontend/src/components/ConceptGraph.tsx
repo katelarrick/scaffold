@@ -12,7 +12,7 @@ import { conceptContent, type ConceptContent } from '../data/conceptContent';
 const cardKeyMap: Record<string, keyof ConceptContent> = {
   'Description':           'description',
   'Example':               'example',
-  'PrairieLearn Practice': 'practice',
+  'PrairieLearn Practice': 'practiceUrl',
 };
 
 interface SavedDetailCard {
