@@ -10,7 +10,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'data-types': {
     description: 'Data is any piece of information that your program stores or works with. In Python, the basic data types are integers, floats, strings, and booleans. Data types help Python store and use information correctly.',
     example: '7\n8.12\n"I love learning Python"\nFalse',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697821834/',
   },
   'data-types:Numeric (integers, floats)': {
     description: 'Numeric data types are used to store numbers in Python. Integers are whole numbers. Floats, or floating point numbers, are numbers with a decimal point. Both can be positive or negative.',
@@ -36,7 +36,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'variables:Variable names': {
-    description: "A variable name is the label you give a variable so you can refer to it in your code. Names can't start with a number or contain spaces. Good names clearly describe what the variable holds.",
+    description: "A variable name is the label you give a variable so you can refer to it in your code. Names are case-sesnsitive and can only contain letters, numbers, or underscores. They can't start with a number or contain spaces, and they can't be Python keywords like 'if', 'else', 'for', etc. Good names clearly describe what the variable holds.",
     example: '# Vague variable name\nx = "Alejandro"\n\n# Specific variable name\nstudent_name = "Kyle"',
     practiceUrl: 'https://us.prairielearn.com/',
   },

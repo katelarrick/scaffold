@@ -100,3 +100,12 @@ export const prereqEdgeData = [
   { source: 'functions',      target: 'errors-debugging' },
   { source: 'conditionals',   target: 'errors-debugging' },
 ];
+
+/*
+Level 1: Basic Data Types
+Level 2: Data Representation, Variables, String Operations
+Level 3: Arithmetic Operations, Boolean Expressions, Functions, Lists, Dictionaries, Tuples, Sets
+Level 4: Loops, Conditional Statements, Testing, Built-in Functions, Nested Lists, Built-in Methods, Mutability
+Level 5: Nested Loops, Main Function, Input & Output, Recursion, String Methods
+Level 6: Files, Imports & Modules, Errors & Debugging
+*/
