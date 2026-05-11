@@ -18,7 +18,7 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
     if (valid) {
       onComplete(pin, true);
     } else {
-      setError('Invalid perm number.');
+      setError('Invalid pin number.');
     }
     setLoading(false);
   };
